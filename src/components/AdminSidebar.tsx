@@ -46,12 +46,6 @@ const NAV_ITEMS: ReadonlyArray<{
     to: '/admin/reports',
     roles: ['ADMIN', 'SUPER_ADMIN'],
   },
-  {
-    key: 'admin_nav_settings',
-    icon: Settings,
-    to: '/admin/settings',
-    roles: ['SUPER_ADMIN'],
-  },
 ]
 
 interface AdminSidebarProps {

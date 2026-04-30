@@ -18,11 +18,9 @@ import { useEffect, useState } from 'react'
 const NAV_ITEMS = [
   { key: 'nav_home', icon: Home, to: '/dashboard' },
   { key: 'nav_profile', icon: User, to: '/profile' },
-  { key: 'nav_groups', icon: Users, to: '/groups' },
   { key: 'nav_messages', icon: MessageCircle, to: '/messages' },
   { key: 'nav_notifications', icon: Bell, to: '/notifications' },
   { key: 'nav_bookmarks', icon: Bookmark, to: '/dashboard' },
-  { key: 'nav_settings', icon: Settings, to: '/dashboard' },
 ] as const
 
 interface DashboardSidebarProps {
@@ -49,12 +47,10 @@ export default function DashboardSidebar({
 
   const labels: Record<string, string> = {
     nav_home: t('nav_home'),
-    nav_groups: t('nav_groups'),
     nav_messages: t('nav_messages'),
     nav_notifications: t('nav_notifications'),
     nav_profile: t('nav_profile'),
     nav_bookmarks: t('nav_bookmarks'),
-    nav_settings: t('nav_settings'),
   }
 
   return (
