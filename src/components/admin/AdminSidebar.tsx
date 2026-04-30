@@ -4,7 +4,6 @@ import {
   Users,
   FileText,
   Flag,
-  Settings,
   ArrowLeftCircle,
   LogOut,
   ShieldCheck,
@@ -32,7 +31,7 @@ const NAV_ITEMS: ReadonlyArray<{
     key: 'admin_nav_users',
     icon: Users,
     to: '/admin/users',
-    roles: ['ADMIN', 'SUPER_ADMIN'],
+    roles: ['SUPER_ADMIN'],
   },
   {
     key: 'admin_nav_posts',

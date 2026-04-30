@@ -91,5 +91,8 @@
   "error_invalid_credentials": "Email hoặc mật khẩu không đúng",
   "error_email_taken": "Email này đã được đăng ký",
   "error_passwords_mismatch": "Mật khẩu không khớp",
-  "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+  "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+  "admin_users_col_status": "Trạng thái",
+  "admin_users_col_action": "Hành động",
+  "admin_users_add_user": "Thêm người dùng"
 }

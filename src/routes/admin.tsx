@@ -1,4 +1,4 @@
-import AdminSidebar from '#/components/AdminSidebar'
+import AdminSidebar from '#/components/admin/AdminSidebar'
 import AuthGuard from '#/components/AuthGuard'
 import LocaleSwitcher from '#/components/LocaleSwitcher'
 import ThemeToggle from '#/components/ThemeToggle'

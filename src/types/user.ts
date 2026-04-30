@@ -18,3 +18,18 @@ export interface LoginResponse {
   user: User;
   token: string;
 }
+
+export interface CreateUserRequest {
+  email: string;
+  full_name: string;
+  role: UserRole;
+  status: UserStatus;
+}
+
+export interface UpdateUserRequest {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  status: UserStatus;
+}
