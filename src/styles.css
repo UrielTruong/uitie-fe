@@ -13,3 +13,7 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+p {
+  margin-bottom: 0;
+}

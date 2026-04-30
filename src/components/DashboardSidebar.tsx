@@ -8,6 +8,7 @@ import {
   Settings,
   Bookmark,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-store'
@@ -17,11 +18,9 @@ import { useEffect, useState } from 'react'
 const NAV_ITEMS = [
   { key: 'nav_home', icon: Home, to: '/dashboard' },
   { key: 'nav_profile', icon: User, to: '/profile' },
-  { key: 'nav_groups', icon: Users, to: '/groups' },
   { key: 'nav_messages', icon: MessageCircle, to: '/messages' },
   { key: 'nav_notifications', icon: Bell, to: '/notifications' },
   { key: 'nav_bookmarks', icon: Bookmark, to: '/dashboard' },
-  { key: 'nav_settings', icon: Settings, to: '/dashboard' },
 ] as const
 
 interface DashboardSidebarProps {
@@ -35,6 +34,7 @@ export default function DashboardSidebar({
   const navigate = useNavigate()
   const user = useStore(authStore, (s) => s.user)
   const [mounted, setMounted] = useState(false)
+  const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   useEffect(() => {
     setMounted(true)
@@ -47,12 +47,10 @@ export default function DashboardSidebar({
 
   const labels: Record<string, string> = {
     nav_home: t('nav_home'),
-    nav_groups: t('nav_groups'),
     nav_messages: t('nav_messages'),
     nav_notifications: t('nav_notifications'),
     nav_profile: t('nav_profile'),
     nav_bookmarks: t('nav_bookmarks'),
-    nav_settings: t('nav_settings'),
   }
 
   return (
@@ -80,6 +78,19 @@ export default function DashboardSidebar({
               <span>{labels[key]}</span>
             </Link>
           ))}
+
+          {mounted && isAdminUser && (
+            <Link
+              to="/admin"
+              className="d-flex align-items-center gap-3 rounded px-3 py-2 text-decoration-none text-danger fw-semibold border-0 bg-transparent mt-2 border-top pt-3"
+              activeProps={{
+                className: 'bg-danger bg-opacity-10 fw-bold',
+              }}
+            >
+              <ShieldCheck size={20} />
+              <span>{t('nav_admin')}</span>
+            </Link>
+          )}
         </nav>
       </div>
 
@@ -97,7 +108,7 @@ export default function DashboardSidebar({
           </div>
           <div className="text-truncate flex-grow-1">
             <p className="mb-0 fw-bold fs-6 text-truncate">
-              {mounted ? (user?.name ?? '') : ''}
+              {mounted ? (user?.full_name ?? '') : ''}
             </p>
             <p className="mb-0 text-secondary small text-truncate">
               {mounted ? (user?.email ?? '') : ''}

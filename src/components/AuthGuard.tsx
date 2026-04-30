@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { isAuthenticated } from '#/lib/auth'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { isAdmin, isAuthenticated } from '#/lib/auth'
 import { Spinner } from 'react-bootstrap'
 
 interface AuthGuardProps {
@@ -17,8 +17,19 @@ export default function AuthGuard({
   const navigate = useNavigate()
   const [checking, setChecking] = useState(true)
 
+  const currentRoute = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+
   useEffect(() => {
     const authed = isAuthenticated()
+    const isAdminRole = isAdmin()
+
+    if (!isAdminRole && currentRoute.includes('/admin')) {
+      void navigate({ to: '/dashboard' })
+      return
+    }
+
     const shouldRedirect = requireAuth ? !authed : authed
 
     if (shouldRedirect) {

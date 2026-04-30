@@ -19,6 +19,10 @@ export function useLogin() { // -> hook, call api, quản lí state, data, loadi
         return
       }
       setAuth(data.data.data.token, data.data.data.user)
+      if(data.data.data.user.role === 'ADMIN' || data.data.data.user.role === 'SUPER_ADMIN') {
+        navigate({ to: '/admin' })
+        return
+      }
       navigate({ to: '/dashboard' })
     },
     onError: (error: any) => {

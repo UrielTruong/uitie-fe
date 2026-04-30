@@ -1,7 +1,12 @@
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STUDENT'
+export type UserStatus = 'Active' | 'Inactive' | 'Locked'
+
 export interface User {
   id: string;
-  name: string | null;
+  full_name: string | null;
   email: string;
+  role: UserRole;
+  status: UserStatus;
 }
 
 export interface LoginRequest {
@@ -12,4 +17,19 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: User;
   token: string;
+}
+
+export interface CreateUserRequest {
+  email: string;
+  full_name: string;
+  role: UserRole;
+  status: UserStatus;
+}
+
+export interface UpdateUserRequest {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  status: UserStatus;
 }
