@@ -72,8 +72,9 @@ const fakeUsers: Map<string, { password: string; user: User }> = new Map([
       user: {
         id: 'usr_1',
         email: 'demo@uitie.io',
-        name: 'Demo User',
-        avatar: `https://api.dicebear.com/9.x/avataaars/svg?seed=demo`,
+        full_name: 'Demo User',
+        role: 'STUDENT',
+        status: 'Active',
       },
     },
   ],
@@ -110,8 +111,9 @@ export async function fakeRegister(
   const user: User = {
     id,
     email: emailLower,
-    name,
-    // avatar: `https://api.dicebear.com/9.x/avataaars/svg?seed=${id}`,
+    full_name: name,
+    role: 'STUDENT',
+    status: 'Active',
   }
   fakeUsers.set(emailLower, { password, user })
   return { token: generateToken(id), user }

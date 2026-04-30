@@ -39,6 +39,15 @@ export function isAuthenticated(): boolean {
   return authStore.state.token !== null
 }
 
+export function isAdmin(): boolean {
+  const role = authStore.state.user?.role
+  return role === 'ADMIN' || role === 'SUPER_ADMIN'
+}
+
+export function isSuperAdmin(): boolean {
+  return authStore.state.user?.role === 'SUPER_ADMIN'
+}
+
 export function setAuth(token: string, user: User): void {
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
