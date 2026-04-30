@@ -1,0 +1,668 @@
+import type { User } from '#/types/user'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface ApiResponse<T> {
+  data: T
+  message: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
+}
+
+export interface FeedPost {
+  id: string
+  author: {
+    id: string
+    name: string
+    avatar: string
+    handle: string
+  }
+  content: string
+  image?: string
+  createdAt: string
+  likes: number
+  comments: number
+  shares: number
+  liked: boolean
+}
+
+export interface SuggestedUser {
+  id: string
+  name: string
+  handle: string
+  avatar: string
+  mutualFriends: number
+}
+
+export interface TrendingTopic {
+  id: string
+  tag: string
+  posts: number
+}
+
+export interface Event {
+  id: string
+  title: string
+  date: string
+  location: string
+  attendees: number
+}
+
+// ─── Fake delay helper ────────────────────────────────────────────────────────
+
+function delay(ms = 600): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function generateToken(userId: string): string {
+  const payload = btoa(JSON.stringify({ sub: userId, iat: Date.now() }))
+  return `fake.${payload}.signature`
+}
+
+// ─── Fake user store (in-memory) ──────────────────────────────────────────────
+
+const fakeUsers: Map<string, { password: string; user: User }> = new Map([
+  [
+    'demo@uitie.io',
+    {
+      password: 'password123',
+      user: {
+        id: 'usr_1',
+        email: 'demo@uitie.io',
+        name: 'Demo User',
+        avatar: `https://api.dicebear.com/9.x/avataaars/svg?seed=demo`,
+      },
+    },
+  ],
+])
+
+// ─── Auth API ─────────────────────────────────────────────────────────────────
+
+export async function fakeLogin(
+  email: string,
+  password: string,
+): Promise<AuthResponse> {
+  await delay()
+  const entry = fakeUsers.get(email.toLowerCase())
+  if (!entry || entry.password !== password) {
+    throw new Error('INVALID_CREDENTIALS')
+  }
+  return {
+    token: generateToken(entry.user.id),
+    user: entry.user,
+  }
+}
+
+export async function fakeRegister(
+  name: string,
+  email: string,
+  password: string,
+): Promise<AuthResponse> {
+  await delay()
+  const emailLower = email.toLowerCase()
+  if (fakeUsers.has(emailLower)) {
+    throw new Error('EMAIL_TAKEN')
+  }
+  const id = `usr_${Date.now()}`
+  const user: User = {
+    id,
+    email: emailLower,
+    name,
+    // avatar: `https://api.dicebear.com/9.x/avataaars/svg?seed=${id}`,
+  }
+  fakeUsers.set(emailLower, { password, user })
+  return { token: generateToken(id), user }
+}
+
+export async function fakeForgotPassword(
+  email: string,
+): Promise<{ message: string }> {
+  await delay()
+  // Always pretend we sent an email (security best practice)
+  return { message: `Reset link sent to ${email}` }
+}
+
+export async function fakeResetPassword(
+  _token: string,
+  _newPassword: string,
+): Promise<{ message: string }> {
+  await delay()
+  return { message: 'Password updated successfully' }
+}
+
+// ─── Feed API ─────────────────────────────────────────────────────────────────
+
+const FAKE_FEED_POSTS: FeedPost[] = [
+  {
+    id: 'post_1',
+    author: {
+      id: 'usr_2',
+      name: 'Linh Nguyễn',
+      handle: '@linh.nguyen',
+      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=linh',
+    },
+    content:
+      '🎓 Vừa đăng ký môn học mới cho kỳ tới! Ai học Kinh tế đại cương cùng không? #UITie #DaiHoc',
+    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    likes: 42,
+    comments: 8,
+    shares: 3,
+    liked: false,
+  },
+  {
+    id: 'post_2',
+    author: {
+      id: 'usr_3',
+      name: 'Minh Trần',
+      handle: '@minh.tran',
+      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=minh',
+    },
+    content:
+      'Hôm nay thư viện trường đông quá 😅 Có ai biết chỗ nào yên tĩnh để học không? #HocBai #CampusLife',
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    likes: 19,
+    comments: 12,
+    shares: 1,
+    liked: true,
+  },
+  {
+    id: 'post_3',
+    author: {
+      id: 'usr_4',
+      name: 'Hoa Phạm',
+      handle: '@hoa.pham',
+      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=hoa',
+    },
+    content:
+      '📚 Chia sẻ tài liệu ôn thi cuối kỳ môn Toán Cao Cấp cho ae năm nhất nhé! Link trong bình luận 👇 #ToanCaoCap #TaiLieu',
+    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    likes: 128,
+    comments: 34,
+    shares: 67,
+    liked: false,
+  },
+  {
+    id: 'post_4',
+    author: {
+      id: 'usr_5',
+      name: 'Tuấn Anh',
+      handle: '@tuan.anh',
+      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=tuan',
+    },
+    content:
+      'Câu lạc bộ Lập Trình vừa thông báo hackathon tháng 5! Giải thưởng lên đến 20 triệu 🔥 Đăng ký ngay trước 15/4 #Hackathon #CNTT',
+    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+    likes: 203,
+    comments: 45,
+    shares: 89,
+    liked: false,
+  },
+  {
+    id: 'post_5',
+    author: {
+      id: 'usr_6',
+      name: 'Thu Hương',
+      handle: '@thu.huong',
+      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=thu',
+    },
+    content:
+      'Tips học online hiệu quả:\n✅ Tắt điện thoại khi học\n✅ Chia nhỏ bài học\n✅ Nghỉ 10 phút mỗi giờ\n✅ Uống đủ nước\n\nChúc mọi người học tốt! 💪 #StudyTips',
+    createdAt: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
+    likes: 87,
+    comments: 15,
+    shares: 42,
+    liked: true,
+  },
+]
+
+export async function fakeFetchFeed(): Promise<FeedPost[]> {
+  await delay(400)
+  return FAKE_FEED_POSTS
+}
+
+// ─── Sidebar data ─────────────────────────────────────────────────────────────
+
+export const FAKE_SUGGESTED_USERS: SuggestedUser[] = [
+  {
+    id: 'usr_7',
+    name: 'An Khoa',
+    handle: '@an.khoa',
+    avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=ankh',
+    mutualFriends: 12,
+  },
+  {
+    id: 'usr_8',
+    name: 'Bảo Châu',
+    handle: '@bao.chau',
+    avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=baoch',
+    mutualFriends: 8,
+  },
+  {
+    id: 'usr_9',
+    name: 'Duy Khang',
+    handle: '@duy.khang',
+    avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=duykh',
+    mutualFriends: 5,
+  },
+]
+
+export const FAKE_TRENDING: TrendingTopic[] = [
+  { id: 't1', tag: '#KyThi2025', posts: 1240 },
+  { id: 't2', tag: '#HackathonUIT', posts: 892 },
+  { id: 't3', tag: '#TuyenSinh2025', posts: 756 },
+  { id: 't4', tag: '#HocBong', posts: 543 },
+  { id: 't5', tag: '#CampusLife', posts: 412 },
+]
+
+export const FAKE_EVENTS: Event[] = [
+  {
+    id: 'ev1',
+    title: 'Hackathon @UIT 2025',
+    date: '15 Tháng 5',
+    location: 'Hội trường A',
+    attendees: 234,
+  },
+  {
+    id: 'ev2',
+    title: 'Hội thảo AI & Tương lai',
+    date: '22 Tháng 5',
+    location: 'Phòng 301',
+    attendees: 89,
+  },
+  {
+    id: 'ev3',
+    title: 'Ngày hội việc làm CNTT',
+    date: '1 Tháng 6',
+    location: 'Sân trường',
+    attendees: 512,
+  },
+]
+
+// ─── Profiles / Roles ─────────────────────────────────────────────────────────
+
+export type UserRole = 'student' | 'lecturer' | 'alumni' | 'admin'
+
+export interface Profile {
+  id: string
+  name: string
+  handle: string
+  role: UserRole
+  faculty: string
+  major: string
+  year?: string
+  job?: string
+  bio?: string
+  avatar: string
+  initials: string
+  color: string
+}
+
+const avatarFor = (seed: string) =>
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`
+
+export const PROFILES: Record<string, Profile> = {
+  me: {
+    id: 'me',
+    name: 'Nguyễn Minh An',
+    handle: 'minhan',
+    role: 'student',
+    faculty: 'Khoa CNPM',
+    major: 'Kỹ thuật phần mềm',
+    year: 'K21',
+    bio: 'Sinh viên năm 3 · yêu thích front-end và thiết kế hệ thống.',
+    avatar: avatarFor('minhan'),
+    initials: 'MA',
+    color: '#1E3A8A',
+  },
+  u1: {
+    id: 'u1',
+    name: 'Trần Bảo Linh',
+    handle: 'baolinh',
+    role: 'alumni',
+    faculty: 'Khoa HTTT',
+    major: 'Hệ thống thông tin',
+    year: 'K17 — Alumni',
+    job: 'Software Engineer @ Tech Co.',
+    bio: 'Cựu sinh viên K17, đang mentor sinh viên năm cuối.',
+    avatar: avatarFor('baolinh'),
+    initials: 'BL',
+    color: '#F97316',
+  },
+  u2: {
+    id: 'u2',
+    name: 'TS. Phạm Quốc Huy',
+    handle: 'phquy',
+    role: 'lecturer',
+    faculty: 'Khoa KHMT',
+    major: 'Giảng viên',
+    bio: 'Giảng viên môn Cấu trúc dữ liệu & Giải thuật.',
+    avatar: avatarFor('phquy'),
+    initials: 'PH',
+    color: '#3B82F6',
+  },
+  u3: {
+    id: 'u3',
+    name: 'Lê Thu Hằng',
+    handle: 'thuhang',
+    role: 'student',
+    faculty: 'Khoa CNPM',
+    major: 'KTPM',
+    year: 'K21',
+    bio: 'Đang học K21 CNPM.',
+    avatar: avatarFor('thuhang'),
+    initials: 'TH',
+    color: '#10B981',
+  },
+  u4: {
+    id: 'u4',
+    name: 'Võ Đăng Khoa',
+    handle: 'dkhoa',
+    role: 'student',
+    faculty: 'Khoa MMT&TT',
+    major: 'ATTT',
+    year: 'K22',
+    bio: 'CTF & security enthusiast.',
+    avatar: avatarFor('dkhoa'),
+    initials: 'DK',
+    color: '#8B5CF6',
+  },
+  u5: {
+    id: 'u5',
+    name: 'Đặng Thanh Tú',
+    handle: 'thanhtu',
+    role: 'alumni',
+    faculty: 'Khoa KHMT',
+    major: 'KHMT',
+    year: 'K15 — Alumni',
+    job: 'Data Scientist',
+    avatar: avatarFor('thanhtu'),
+    initials: 'TT',
+    color: '#EC4899',
+  },
+  u6: {
+    id: 'u6',
+    name: 'Hoàng Gia Bảo',
+    handle: 'giabao',
+    role: 'student',
+    faculty: 'Khoa HTTT',
+    major: 'HTTT',
+    year: 'K22',
+    avatar: avatarFor('giabao'),
+    initials: 'GB',
+    color: '#0EA5E9',
+  },
+}
+
+// ─── Groups ───────────────────────────────────────────────────────────────────
+
+export type GroupRole = 'admin' | 'member' | 'pending' | 'none'
+
+export interface Group {
+  id: string
+  name: string
+  members: number
+  kind: string
+  cover: string
+  role: GroupRole
+  desc: string
+}
+
+export const FAKE_GROUPS: Group[] = [
+  {
+    id: 'g1',
+    name: 'CNPM K21 — Lập trình Web',
+    members: 147,
+    kind: 'Lớp học phần',
+    cover: 'linear-gradient(135deg,#1E3A8A,#3B82F6)',
+    role: 'member',
+    desc: 'Nhóm chính thức của lớp học phần IT002.K21.',
+  },
+  {
+    id: 'g2',
+    name: 'UIT Alumni Network',
+    members: 2840,
+    kind: 'Mạng lưới cựu SV',
+    cover: 'linear-gradient(135deg,#F97316,#FB923C)',
+    role: 'member',
+    desc: 'Kết nối các thế hệ sinh viên và cựu sinh viên UIT.',
+  },
+  {
+    id: 'g3',
+    name: 'CLB Lập trình Cạnh tranh',
+    members: 412,
+    kind: 'Câu lạc bộ',
+    cover: 'linear-gradient(135deg,#0F172A,#334155)',
+    role: 'pending',
+    desc: 'Luyện đề ACM/ICPC, CP tuần 2 buổi tối thứ 4 & 7.',
+  },
+  {
+    id: 'g4',
+    name: 'Đồng hương Miền Trung',
+    members: 186,
+    kind: 'Hội đồng hương',
+    cover: 'linear-gradient(135deg,#0EA5E9,#06B6D4)',
+    role: 'none',
+    desc: 'Hỗ trợ tân sinh viên từ các tỉnh miền Trung.',
+  },
+  {
+    id: 'g5',
+    name: 'AI & Machine Learning Study',
+    members: 298,
+    kind: 'Nhóm học thuật',
+    cover: 'linear-gradient(135deg,#8B5CF6,#EC4899)',
+    role: 'admin',
+    desc: 'Cùng nhau đọc paper và triển khai mô hình ML.',
+  },
+  {
+    id: 'g6',
+    name: 'Security & CTF Hub',
+    members: 94,
+    kind: 'Câu lạc bộ',
+    cover: 'linear-gradient(135deg,#10B981,#34D399)',
+    role: 'none',
+    desc: 'Thảo luận CTF, write-up, và các vấn đề an toàn thông tin.',
+  },
+]
+
+// ─── Conversations / Messages ─────────────────────────────────────────────────
+
+export interface Conversation {
+  id: string
+  userId: string
+  lastMsg: string
+  time: string
+  unread: number
+  online: boolean
+}
+
+export interface ChatAttachment {
+  type: 'pdf' | 'zip' | 'doc'
+  name: string
+  size: string
+}
+
+export interface ChatMessage {
+  from: string
+  text?: string
+  time: string
+  attachment?: ChatAttachment
+}
+
+export const FAKE_CONVERSATIONS: Conversation[] = [
+  {
+    id: 'c1',
+    userId: 'u3',
+    lastMsg: 'Tài liệu mình vừa gửi rồi nhé',
+    time: '10:24',
+    unread: 2,
+    online: true,
+  },
+  {
+    id: 'c2',
+    userId: 'u1',
+    lastMsg: 'Cảm ơn anh rất nhiều ạ!',
+    time: '09:11',
+    unread: 0,
+    online: true,
+  },
+  {
+    id: 'c3',
+    userId: 'u2',
+    lastMsg: 'Thầy: Nhớ nộp trước 20/04 nhé',
+    time: 'hôm qua',
+    unread: 1,
+    online: false,
+  },
+  {
+    id: 'c4',
+    userId: 'u4',
+    lastMsg: 'OK để mình gửi write-up',
+    time: 'hôm qua',
+    unread: 0,
+    online: false,
+  },
+  {
+    id: 'c5',
+    userId: 'u5',
+    lastMsg: 'CV em gửi anh xem qua rồi',
+    time: '2 ngày',
+    unread: 0,
+    online: false,
+  },
+  {
+    id: 'c6',
+    userId: 'u6',
+    lastMsg: 'Bài tập nhóm mình làm phần nào?',
+    time: '3 ngày',
+    unread: 0,
+    online: true,
+  },
+]
+
+export const FAKE_MESSAGES: Record<string, ChatMessage[]> = {
+  c1: [
+    {
+      from: 'u3',
+      text: 'Hi An! Mình gửi bạn bộ tài liệu ôn CTDL nhé',
+      time: '10:18',
+    },
+    {
+      from: 'u3',
+      time: '10:19',
+      attachment: {
+        type: 'pdf',
+        name: 'CTDLGT_dethi_2023.pdf',
+        size: '2.1 MB',
+      },
+    },
+    {
+      from: 'me',
+      text: 'Cảm ơn bạn nhiều nha! Mình xem qua rồi',
+      time: '10:22',
+    },
+    { from: 'u3', text: 'Tài liệu mình vừa gửi rồi nhé 👍', time: '10:24' },
+  ],
+  c2: [
+    { from: 'u1', text: 'Chào em, anh xem CV rồi', time: '09:05' },
+    {
+      from: 'u1',
+      text: 'Kinh nghiệm ổn, em có muốn mình refer vào team front-end không?',
+      time: '09:06',
+    },
+    { from: 'me', text: 'Dạ em rất muốn ạ!', time: '09:09' },
+    { from: 'me', text: 'Cảm ơn anh rất nhiều ạ!', time: '09:11' },
+  ],
+  c3: [
+    {
+      from: 'u2',
+      text: 'An ơi, nhóm em xong phần backend chưa?',
+      time: 'hôm qua',
+    },
+    { from: 'me', text: 'Dạ thầy em đang làm phần auth ạ', time: 'hôm qua' },
+    { from: 'u2', text: 'Nhớ nộp trước 20/04 nhé', time: 'hôm qua' },
+  ],
+  c4: [],
+  c5: [],
+  c6: [],
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export type NotifType =
+  | 'like'
+  | 'comment'
+  | 'mention'
+  | 'group'
+  | 'follow'
+  | 'system'
+
+export interface AppNotification {
+  id: string
+  type: NotifType
+  actor: string | null
+  text: string
+  time: string
+  unread: boolean
+}
+
+export const FAKE_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'n1',
+    type: 'like',
+    actor: 'u1',
+    text: 'đã thả tim bài viết của bạn',
+    time: '5 phút trước',
+    unread: true,
+  },
+  {
+    id: 'n2',
+    type: 'comment',
+    actor: 'u3',
+    text: 'đã bình luận: "Cảm ơn bạn, rất hữu ích!"',
+    time: '12 phút',
+    unread: true,
+  },
+  {
+    id: 'n3',
+    type: 'mention',
+    actor: 'u2',
+    text: 'đã nhắc bạn trong một bài viết',
+    time: '1 giờ',
+    unread: true,
+  },
+  {
+    id: 'n4',
+    type: 'group',
+    actor: 'u5',
+    text: 'đã mời bạn tham gia nhóm "AI & ML Study"',
+    time: '3 giờ',
+    unread: false,
+  },
+  {
+    id: 'n5',
+    type: 'follow',
+    actor: 'u4',
+    text: 'đã bắt đầu theo dõi bạn',
+    time: 'hôm qua',
+    unread: false,
+  },
+  {
+    id: 'n6',
+    type: 'system',
+    actor: null,
+    text: 'Bài đăng của bạn trong "CNPM K21" đã được duyệt',
+    time: 'hôm qua',
+    unread: false,
+  },
+  {
+    id: 'n7',
+    type: 'like',
+    actor: 'u6',
+    text: 'và 12 người khác đã thả tim bài viết',
+    time: '2 ngày',
+    unread: false,
+  },
+]
