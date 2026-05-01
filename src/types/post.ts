@@ -20,4 +20,8 @@ export interface CreatePostPayload {
       id: number
       category_name: string
     } | null
+    likes: number
+    comments: number
+    shares: number
+    liked: boolean
   }

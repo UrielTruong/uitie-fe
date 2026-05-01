@@ -12,22 +12,7 @@ export interface AuthResponse {
   user: User
 }
 
-export interface FeedPost {
-  id: string
-  author: {
-    id: string
-    name: string
-    avatar: string
-    handle: string
-  }
-  content: string
-  image?: string
-  createdAt: string
-  likes: number
-  comments: number
-  shares: number
-  liked: boolean
-}
+
 
 export interface SuggestedUser {
   id: string
@@ -135,90 +120,6 @@ export async function fakeResetPassword(
   return { message: 'Password updated successfully' }
 }
 
-// ─── Feed API ─────────────────────────────────────────────────────────────────
-
-const FAKE_FEED_POSTS: FeedPost[] = [
-  {
-    id: 'post_1',
-    author: {
-      id: 'usr_2',
-      name: 'Linh Nguyễn',
-      handle: '@linh.nguyen',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=linh',
-    },
-    content:
-      '🎓 Vừa đăng ký môn học mới cho kỳ tới! Ai học Kinh tế đại cương cùng không? #UITie #DaiHoc',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    likes: 42,
-    comments: 8,
-    shares: 3,
-    liked: false,
-  },
-  {
-    id: 'post_2',
-    author: {
-      id: 'usr_3',
-      name: 'Minh Trần',
-      handle: '@minh.tran',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=minh',
-    },
-    content:
-      'Hôm nay thư viện trường đông quá 😅 Có ai biết chỗ nào yên tĩnh để học không? #HocBai #CampusLife',
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    likes: 19,
-    comments: 12,
-    shares: 1,
-    liked: true,
-  },
-  {
-    id: 'post_3',
-    author: {
-      id: 'usr_4',
-      name: 'Hoa Phạm',
-      handle: '@hoa.pham',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=hoa',
-    },
-    content:
-      '📚 Chia sẻ tài liệu ôn thi cuối kỳ môn Toán Cao Cấp cho ae năm nhất nhé! Link trong bình luận 👇 #ToanCaoCap #TaiLieu',
-    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-    likes: 128,
-    comments: 34,
-    shares: 67,
-    liked: false,
-  },
-  {
-    id: 'post_4',
-    author: {
-      id: 'usr_5',
-      name: 'Tuấn Anh',
-      handle: '@tuan.anh',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=tuan',
-    },
-    content:
-      'Câu lạc bộ Lập Trình vừa thông báo hackathon tháng 5! Giải thưởng lên đến 20 triệu 🔥 Đăng ký ngay trước 15/4 #Hackathon #CNTT',
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    likes: 203,
-    comments: 45,
-    shares: 89,
-    liked: false,
-  },
-  {
-    id: 'post_5',
-    author: {
-      id: 'usr_6',
-      name: 'Thu Hương',
-      handle: '@thu.huong',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=thu',
-    },
-    content:
-      'Tips học online hiệu quả:\n✅ Tắt điện thoại khi học\n✅ Chia nhỏ bài học\n✅ Nghỉ 10 phút mỗi giờ\n✅ Uống đủ nước\n\nChúc mọi người học tốt! 💪 #StudyTips',
-    createdAt: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
-    likes: 87,
-    comments: 15,
-    shares: 42,
-    liked: true,
-  },
-]
 
 export type Category = {
   id: number
