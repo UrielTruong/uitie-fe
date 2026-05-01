@@ -1,11 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { type FeedPost } from '#/lib/fake-api'
 import FeedPostCard from '#/components/FeedPostCard'
 import Spinner from 'react-bootstrap/Spinner'
 import CreatePostForm from '#/components/CreatePostForm'
 import { useFeedPosts } from '#/api/usePost'
 
-export const Route = createFileRoute('/_authenticated/dashboard')({
+export const Route = createFileRoute('/_authenticated/dashboard/')({
   component: DashboardPage,
 })
 
@@ -23,7 +22,7 @@ function DashboardPage() {
       ) : (
         <div className="d-flex flex-column">
           {posts?.map((post) => (
-            <FeedPostCard key={post.id} post={post as unknown as FeedPost} /> // ← bỏ as unknown as FeedPost
+            <FeedPostCard key={post.id} post={post} />
           ))}
         </div>
       )}

@@ -1,5 +1,6 @@
-import axiosClient from './axiosClient'
+import type { Pagination } from '#/types/response'
 import type { CreatePostPayload, Post } from '../types/post'
+import axiosClient from './axiosClient'
 
 interface CreatePostResponse {
   status: boolean
@@ -16,3 +17,8 @@ export const createPost = (payload: CreatePostPayload) =>
   axiosClient
     .post<CreatePostResponse>('/post', payload)
     .then((res) => res.data)
+
+export const searchPost = async (keyword?: string): Promise<Pagination<Post[]>> => {
+  const res = await axiosClient.get<Pagination<Post[]>>('/post/search', { params: { keyword } })
+  return res.data  
+}

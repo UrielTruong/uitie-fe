@@ -89,5 +89,12 @@
   "error_invalid_credentials": "Invalid email or password",
   "error_email_taken": "Email is already registered",
   "error_passwords_mismatch": "Passwords do not match",
-  "error_generic": "Something went wrong. Please try again."
+  "error_generic": "Something went wrong. Please try again.",
+  "dashboard_search_title": "Search",
+  "dashboard_search_result": "Results for",
+  "dashboard_search_no_result": "No results found.",
+  "dashboard_search_posts": "Posts",
+  "dashboard_search_users": "Users",
+  "dashboard_search_posts_count": "Posts",
+  "dashboard_search_users_count": "Users"
 }
