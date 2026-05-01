@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { key: 'nav_profile', icon: User, to: '/profile' },
   { key: 'nav_messages', icon: MessageCircle, to: '/messages' },
   { key: 'nav_notifications', icon: Bell, to: '/notifications' },
-  { key: 'nav_bookmarks', icon: Bookmark, to: '/dashboard' },
 ] as const
 
 interface DashboardSidebarProps {
@@ -50,7 +49,6 @@ export default function DashboardSidebar({
     nav_messages: t('nav_messages'),
     nav_notifications: t('nav_notifications'),
     nav_profile: t('nav_profile'),
-    nav_bookmarks: t('nav_bookmarks'),
   }
 
   return (

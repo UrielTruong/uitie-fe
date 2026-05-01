@@ -1,11 +1,7 @@
 import { Button, Image } from 'react-bootstrap'
-import { UserPlus, TrendingUp, Calendar } from 'lucide-react'
+import { UserPlus, TrendingUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import {
-  FAKE_SUGGESTED_USERS,
-  FAKE_TRENDING,
-  FAKE_EVENTS,
-} from '#/lib/fake-api'
+import { FAKE_SUGGESTED_USERS, FAKE_TRENDING } from '#/lib/fake-api'
 
 export default function RightSidebar() {
   const { t } = useTranslation()
@@ -15,9 +11,7 @@ export default function RightSidebar() {
       <section>
         <div className="mb-3 d-flex align-items-center gap-2">
           <TrendingUp className="text-primary" size={18} />
-          <h6 className="mb-0 fw-bold">
-            {t('dashboard_trending')}
-          </h6>
+          <h6 className="mb-0 fw-bold">{t('dashboard_trending')}</h6>
         </div>
         <div className="d-flex flex-column gap-3">
           {FAKE_TRENDING.map((topic, idx) => (
@@ -30,9 +24,7 @@ export default function RightSidebar() {
                 <p className="mb-0 text-muted small">
                   #{idx + 1} &middot; Trending
                 </p>
-                <p className="mb-0 fw-semibold text-dark">
-                  {topic.tag}
-                </p>
+                <p className="mb-0 fw-semibold text-dark">{topic.tag}</p>
                 <p className="mb-0 text-muted small">
                   {topic.posts.toLocaleString()} posts
                 </p>
@@ -48,9 +40,7 @@ export default function RightSidebar() {
       <section>
         <div className="mb-3 d-flex align-items-center gap-2">
           <UserPlus className="text-primary" size={18} />
-          <h6 className="mb-0 fw-bold">
-            {t('dashboard_suggested')}
-          </h6>
+          <h6 className="mb-0 fw-bold">{t('dashboard_suggested')}</h6>
         </div>
         <div className="d-flex flex-column gap-3">
           {FAKE_SUGGESTED_USERS.map((user) => (
@@ -79,37 +69,6 @@ export default function RightSidebar() {
               >
                 Follow
               </Button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <hr className="my-1 border-secondary" />
-
-      {/* Upcoming Events */}
-      <section>
-        <div className="mb-3 d-flex align-items-center gap-2">
-          <Calendar className="text-primary" size={18} />
-          <h6 className="mb-0 fw-bold">
-            {t('dashboard_events')}
-          </h6>
-        </div>
-        <div className="d-flex flex-column gap-3">
-          {FAKE_EVENTS.map((event) => (
-            <div
-              key={event.id}
-              className="rounded-4 border bg-body p-3"
-              style={{ cursor: 'pointer' }}
-            >
-              <p className="mb-1 fw-semibold small leading-tight">
-                {event.title}
-              </p>
-              <p className="mb-1 text-muted" style={{ fontSize: '0.75rem' }}>
-                {event.date} &middot; {event.location}
-              </p>
-              <p className="mb-0 text-primary fw-medium" style={{ fontSize: '0.75rem' }}>
-                {event.attendees} going
-              </p>
             </div>
           ))}
         </div>

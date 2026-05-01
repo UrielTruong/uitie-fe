@@ -169,30 +169,6 @@ export const FAKE_TRENDING: TrendingTopic[] = [
   { id: 't5', tag: '#CampusLife', posts: 412 },
 ]
 
-export const FAKE_EVENTS: Event[] = [
-  {
-    id: 'ev1',
-    title: 'Hackathon @UIT 2025',
-    date: '15 Tháng 5',
-    location: 'Hội trường A',
-    attendees: 234,
-  },
-  {
-    id: 'ev2',
-    title: 'Hội thảo AI & Tương lai',
-    date: '22 Tháng 5',
-    location: 'Phòng 301',
-    attendees: 89,
-  },
-  {
-    id: 'ev3',
-    title: 'Ngày hội việc làm CNTT',
-    date: '1 Tháng 6',
-    location: 'Sân trường',
-    attendees: 512,
-  },
-]
-
 // ─── Profiles / Roles ─────────────────────────────────────────────────────────
 
 export type UserRole = 'student' | 'lecturer' | 'alumni' | 'admin'
@@ -322,62 +298,7 @@ export interface Group {
   desc: string
 }
 
-export const FAKE_GROUPS: Group[] = [
-  {
-    id: 'g1',
-    name: 'CNPM K21 — Lập trình Web',
-    members: 147,
-    kind: 'Lớp học phần',
-    cover: 'linear-gradient(135deg,#1E3A8A,#3B82F6)',
-    role: 'member',
-    desc: 'Nhóm chính thức của lớp học phần IT002.K21.',
-  },
-  {
-    id: 'g2',
-    name: 'UIT Alumni Network',
-    members: 2840,
-    kind: 'Mạng lưới cựu SV',
-    cover: 'linear-gradient(135deg,#F97316,#FB923C)',
-    role: 'member',
-    desc: 'Kết nối các thế hệ sinh viên và cựu sinh viên UIT.',
-  },
-  {
-    id: 'g3',
-    name: 'CLB Lập trình Cạnh tranh',
-    members: 412,
-    kind: 'Câu lạc bộ',
-    cover: 'linear-gradient(135deg,#0F172A,#334155)',
-    role: 'pending',
-    desc: 'Luyện đề ACM/ICPC, CP tuần 2 buổi tối thứ 4 & 7.',
-  },
-  {
-    id: 'g4',
-    name: 'Đồng hương Miền Trung',
-    members: 186,
-    kind: 'Hội đồng hương',
-    cover: 'linear-gradient(135deg,#0EA5E9,#06B6D4)',
-    role: 'none',
-    desc: 'Hỗ trợ tân sinh viên từ các tỉnh miền Trung.',
-  },
-  {
-    id: 'g5',
-    name: 'AI & Machine Learning Study',
-    members: 298,
-    kind: 'Nhóm học thuật',
-    cover: 'linear-gradient(135deg,#8B5CF6,#EC4899)',
-    role: 'admin',
-    desc: 'Cùng nhau đọc paper và triển khai mô hình ML.',
-  },
-  {
-    id: 'g6',
-    name: 'Security & CTF Hub',
-    members: 94,
-    kind: 'Câu lạc bộ',
-    cover: 'linear-gradient(135deg,#10B981,#34D399)',
-    role: 'none',
-    desc: 'Thảo luận CTF, write-up, và các vấn đề an toàn thông tin.',
-  },
-]
+
 
 // ─── Conversations / Messages ─────────────────────────────────────────────────
 
