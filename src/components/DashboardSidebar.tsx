@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-store'
 import { authStore, clearAuth } from '#/lib/auth'
 import { useEffect, useState } from 'react'
+import { Image } from 'react-bootstrap'
 
 const NAV_ITEMS = [
   { key: 'nav_home', icon: Home, to: '/dashboard' },
@@ -58,7 +59,8 @@ export default function DashboardSidebar({
       {/* Logo */}
       <div>
         <div className="mb-4 px-3">
-          <span className="fs-4 fw-black text-primary">UITie</span>
+          <Image src="/logo-uitie.png" alt="UITie" width={50} height={50} />
+          <span>UITie</span>
         </div>
 
         {/* Nav items */}

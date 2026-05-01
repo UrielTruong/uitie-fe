@@ -34,7 +34,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'UITie — Campus Social Network' },
+      { title: 'UITie - Social Network' },
       {
         name: 'description',
         content: 'Connect with your campus community on UITie',

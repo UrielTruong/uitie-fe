@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, Spinner, Table, Badge, Button } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
-import { useGetUserList } from '#/api/useAdmin'
-import { Pencil, Plus, Trash } from 'lucide-react'
+import { exportUsersPdf, useGetUserList } from '#/api/useAdmin'
+import { FileDown, Pencil, Plus, Trash } from 'lucide-react'
 import { useState } from 'react'
 import UserModal from '#/components/admin/UserModal'
 import type { User } from '#/types/user'
@@ -23,6 +23,8 @@ function AdminUsersPage() {
   >(undefined)
 
   const [editingUser, setEditingUser] = useState<User | null>(null)
+
+  const [isExporting, setIsExporting] = useState(false)
 
   const handleOpenAddUserModal = () => {
     setUserModalVisible(true)
@@ -46,6 +48,15 @@ function AdminUsersPage() {
     setConfirmDeleteUserModal(undefined)
   }
 
+  const handleExportPdf = async () => {
+    setIsExporting(true)
+    try {
+      await exportUsersPdf()
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div className="container py-4 px-3" style={{ maxWidth: '1100px' }}>
       <div className="d-flex justify-content-between align-items-center">
@@ -53,13 +64,26 @@ function AdminUsersPage() {
           <h4 className="fw-bold mb-1">{t('admin_users_title')}</h4>
           <p className="text-secondary mb-4">{t('admin_users_subtitle')}</p>
         </div>
-        <Button
-          className="d-flex align-items-center gap-2"
-          onClick={handleOpenAddUserModal}
-        >
-          <Plus size={18} />
-          <p>{t('admin_users_add_user')}</p>
-        </Button>
+
+        <div className="d-flex align-items-center gap-2">
+          <Button
+            variant="outline-danger"
+            className="d-flex align-items-center gap-2"
+            onClick={handleExportPdf}
+            disabled={isExporting}
+          >
+            <FileDown size={18} />
+            <span>{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+          </Button>
+
+          <Button
+            className="d-flex align-items-center gap-2"
+            onClick={handleOpenAddUserModal}
+          >
+            <Plus size={18} />
+            <p>{t('admin_users_add_user')}</p>
+          </Button>
+        </div>
       </div>
 
       <Card className="border-0 shadow-sm rounded-4">
