@@ -85,3 +85,17 @@ export function useDeleteUser() {
     },
   })
 }
+
+//export users pdf
+export async function exportUsersPdf(): Promise<void> {
+  const response = await axiosClient.get('/admin/user/export-pdf', {
+    responseType: 'blob',
+  })
+
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'users.pdf'
+  link.click()
+  URL.revokeObjectURL(url)
+}
