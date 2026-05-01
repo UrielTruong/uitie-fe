@@ -8,9 +8,11 @@ import {
   createFileRoute,
   Outlet,
   redirect,
+  useNavigate,
   useRouterState,
 } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -27,7 +29,8 @@ function AuthenticatedLayout() {
   const { t } = useTranslation()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const showRightSidebar = pathname === '/dashboard'
-
+  const [search, setSearch] = useState('')
+  const navigate = useNavigate()
   return (
     <AuthGuard requireAuth={true} redirectTo="/login">
       <div className="d-flex min-vh-100 bg-body">
@@ -60,6 +63,13 @@ function AuthenticatedLayout() {
                 id="dashboard-search"
                 placeholder={t('dashboard_search')}
                 className="form-control form-control-sm bg-body-secondary border-0 ps-5 rounded-pill text-body"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDownCapture={(e) =>
+                  e.key === 'Enter' &&
+                  search.trim() !== '' &&
+                  navigate({ to: '/dashboard/search?keyword=' + search })
+                }
               />
             </div>
 

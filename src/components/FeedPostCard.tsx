@@ -2,6 +2,7 @@ import type { Post } from '#/types/post'
 import { Bookmark, Heart, MessageCircle, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Card } from 'react-bootstrap'
+import UserAvatar from './UserAvatar'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -34,14 +35,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         {/* Author */}
         <div className="d-flex justify-content-between align-items-start mb-3">
           <div className="d-flex align-items-center gap-3">
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary flex-shrink-0"
-              style={{ width: '40px', height: '40px' }}
-            >
-              <span className="text-secondary small">
-                {post.author.full_name?.charAt(0).toUpperCase() ?? '?'}
-              </span>
-            </div>
+            <UserAvatar fullName={post.author.full_name} />
             <div>
               <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
               <div className="text-muted small">{timeAgo(post.created_at)}</div>
