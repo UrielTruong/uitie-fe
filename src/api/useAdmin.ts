@@ -99,3 +99,17 @@ export async function exportUsersPdf(): Promise<void> {
   link.click()
   URL.revokeObjectURL(url)
 }
+
+//export posts pdf
+export async function exportPostsPdf(): Promise<void> {
+  const response = await axiosClient.get('/admin/post/export-pdf', {
+    responseType: 'blob',
+  })
+
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'posts.pdf'
+  link.click()
+  URL.revokeObjectURL(url)
+}
