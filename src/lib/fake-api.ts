@@ -12,22 +12,7 @@ export interface AuthResponse {
   user: User
 }
 
-export interface FeedPost {
-  id: string
-  author: {
-    id: string
-    name: string
-    avatar: string
-    handle: string
-  }
-  content: string
-  image?: string
-  createdAt: string
-  likes: number
-  comments: number
-  shares: number
-  liked: boolean
-}
+
 
 export interface SuggestedUser {
   id: string
@@ -135,94 +120,19 @@ export async function fakeResetPassword(
   return { message: 'Password updated successfully' }
 }
 
-// ─── Feed API ─────────────────────────────────────────────────────────────────
 
-const FAKE_FEED_POSTS: FeedPost[] = [
-  {
-    id: 'post_1',
-    author: {
-      id: 'usr_2',
-      name: 'Linh Nguyễn',
-      handle: '@linh.nguyen',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=linh',
-    },
-    content:
-      '🎓 Vừa đăng ký môn học mới cho kỳ tới! Ai học Kinh tế đại cương cùng không? #UITie #DaiHoc',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    likes: 42,
-    comments: 8,
-    shares: 3,
-    liked: false,
-  },
-  {
-    id: 'post_2',
-    author: {
-      id: 'usr_3',
-      name: 'Minh Trần',
-      handle: '@minh.tran',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=minh',
-    },
-    content:
-      'Hôm nay thư viện trường đông quá 😅 Có ai biết chỗ nào yên tĩnh để học không? #HocBai #CampusLife',
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    likes: 19,
-    comments: 12,
-    shares: 1,
-    liked: true,
-  },
-  {
-    id: 'post_3',
-    author: {
-      id: 'usr_4',
-      name: 'Hoa Phạm',
-      handle: '@hoa.pham',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=hoa',
-    },
-    content:
-      '📚 Chia sẻ tài liệu ôn thi cuối kỳ môn Toán Cao Cấp cho ae năm nhất nhé! Link trong bình luận 👇 #ToanCaoCap #TaiLieu',
-    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-    likes: 128,
-    comments: 34,
-    shares: 67,
-    liked: false,
-  },
-  {
-    id: 'post_4',
-    author: {
-      id: 'usr_5',
-      name: 'Tuấn Anh',
-      handle: '@tuan.anh',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=tuan',
-    },
-    content:
-      'Câu lạc bộ Lập Trình vừa thông báo hackathon tháng 5! Giải thưởng lên đến 20 triệu 🔥 Đăng ký ngay trước 15/4 #Hackathon #CNTT',
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    likes: 203,
-    comments: 45,
-    shares: 89,
-    liked: false,
-  },
-  {
-    id: 'post_5',
-    author: {
-      id: 'usr_6',
-      name: 'Thu Hương',
-      handle: '@thu.huong',
-      avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=thu',
-    },
-    content:
-      'Tips học online hiệu quả:\n✅ Tắt điện thoại khi học\n✅ Chia nhỏ bài học\n✅ Nghỉ 10 phút mỗi giờ\n✅ Uống đủ nước\n\nChúc mọi người học tốt! 💪 #StudyTips',
-    createdAt: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
-    likes: 87,
-    comments: 15,
-    shares: 42,
-    liked: true,
-  },
-]
+export type Category = {
+  id: number
+  category_name: string
+}
 
-export async function fakeFetchFeed(): Promise<FeedPost[]> {
-  await delay(400)
-  return FAKE_FEED_POSTS
+export const fakeFetchFeed = async (): Promise<Category[]> => {
+  return [
+    { id: 1, category_name: 'Học tập' },
+    { id: 2, category_name: 'Hành chính' },
+    { id: 3, category_name: 'Hướng nghiệp' },
+    { id: 4, category_name: 'Đời sống' },
+  ]
 }
 
 // ─── Sidebar data ─────────────────────────────────────────────────────────────
@@ -257,30 +167,6 @@ export const FAKE_TRENDING: TrendingTopic[] = [
   { id: 't3', tag: '#TuyenSinh2025', posts: 756 },
   { id: 't4', tag: '#HocBong', posts: 543 },
   { id: 't5', tag: '#CampusLife', posts: 412 },
-]
-
-export const FAKE_EVENTS: Event[] = [
-  {
-    id: 'ev1',
-    title: 'Hackathon @UIT 2025',
-    date: '15 Tháng 5',
-    location: 'Hội trường A',
-    attendees: 234,
-  },
-  {
-    id: 'ev2',
-    title: 'Hội thảo AI & Tương lai',
-    date: '22 Tháng 5',
-    location: 'Phòng 301',
-    attendees: 89,
-  },
-  {
-    id: 'ev3',
-    title: 'Ngày hội việc làm CNTT',
-    date: '1 Tháng 6',
-    location: 'Sân trường',
-    attendees: 512,
-  },
 ]
 
 // ─── Profiles / Roles ─────────────────────────────────────────────────────────
@@ -412,62 +298,7 @@ export interface Group {
   desc: string
 }
 
-export const FAKE_GROUPS: Group[] = [
-  {
-    id: 'g1',
-    name: 'CNPM K21 — Lập trình Web',
-    members: 147,
-    kind: 'Lớp học phần',
-    cover: 'linear-gradient(135deg,#1E3A8A,#3B82F6)',
-    role: 'member',
-    desc: 'Nhóm chính thức của lớp học phần IT002.K21.',
-  },
-  {
-    id: 'g2',
-    name: 'UIT Alumni Network',
-    members: 2840,
-    kind: 'Mạng lưới cựu SV',
-    cover: 'linear-gradient(135deg,#F97316,#FB923C)',
-    role: 'member',
-    desc: 'Kết nối các thế hệ sinh viên và cựu sinh viên UIT.',
-  },
-  {
-    id: 'g3',
-    name: 'CLB Lập trình Cạnh tranh',
-    members: 412,
-    kind: 'Câu lạc bộ',
-    cover: 'linear-gradient(135deg,#0F172A,#334155)',
-    role: 'pending',
-    desc: 'Luyện đề ACM/ICPC, CP tuần 2 buổi tối thứ 4 & 7.',
-  },
-  {
-    id: 'g4',
-    name: 'Đồng hương Miền Trung',
-    members: 186,
-    kind: 'Hội đồng hương',
-    cover: 'linear-gradient(135deg,#0EA5E9,#06B6D4)',
-    role: 'none',
-    desc: 'Hỗ trợ tân sinh viên từ các tỉnh miền Trung.',
-  },
-  {
-    id: 'g5',
-    name: 'AI & Machine Learning Study',
-    members: 298,
-    kind: 'Nhóm học thuật',
-    cover: 'linear-gradient(135deg,#8B5CF6,#EC4899)',
-    role: 'admin',
-    desc: 'Cùng nhau đọc paper và triển khai mô hình ML.',
-  },
-  {
-    id: 'g6',
-    name: 'Security & CTF Hub',
-    members: 94,
-    kind: 'Câu lạc bộ',
-    cover: 'linear-gradient(135deg,#10B981,#34D399)',
-    role: 'none',
-    desc: 'Thảo luận CTF, write-up, và các vấn đề an toàn thông tin.',
-  },
-]
+
 
 // ─── Conversations / Messages ─────────────────────────────────────────────────
 

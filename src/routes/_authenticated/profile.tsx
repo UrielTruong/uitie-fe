@@ -9,7 +9,7 @@ import {
   UserPlus,
   BookOpen,
 } from 'lucide-react'
-import { PROFILES, FAKE_GROUPS } from '#/lib/fake-api'
+import { PROFILES } from '#/lib/fake-api'
 import type { Profile, UserRole } from '#/lib/fake-api'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -19,9 +19,16 @@ export const Route = createFileRoute('/_authenticated/profile')({
   component: ProfilePage,
 })
 
-const ROLE_BADGE: Record<UserRole, { label: string; bg: string; text: string }> = {
+const ROLE_BADGE: Record<
+  UserRole,
+  { label: string; bg: string; text: string }
+> = {
   student: { label: 'Sinh viên', bg: 'info-subtle', text: 'info-emphasis' },
-  lecturer: { label: 'Giảng viên', bg: 'primary-subtle', text: 'primary-emphasis' },
+  lecturer: {
+    label: 'Giảng viên',
+    bg: 'primary-subtle',
+    text: 'primary-emphasis',
+  },
   alumni: { label: 'Cựu SV', bg: 'warning-subtle', text: 'warning-emphasis' },
   admin: { label: 'Admin', bg: 'danger-subtle', text: 'danger-emphasis' },
 }
@@ -53,8 +60,7 @@ function ProfilePage() {
         className="position-relative"
         style={{
           height: 240,
-          background:
-            'linear-gradient(120deg,#1E3A8A,#3B82F6)',
+          background: 'linear-gradient(120deg,#1E3A8A,#3B82F6)',
         }}
       >
         {isMe && (
@@ -71,8 +77,14 @@ function ProfilePage() {
       {/* Header */}
       <div className="bg-body border-bottom">
         <div className="container-xl px-3 px-md-4">
-          <div className="d-flex flex-column flex-md-row align-items-md-end gap-3 pb-3" style={{ marginTop: -56 }}>
-            <div className="position-relative" style={{ width: 140, height: 140 }}>
+          <div
+            className="d-flex flex-column flex-md-row align-items-md-end gap-3 pb-3"
+            style={{ marginTop: -56 }}
+          >
+            <div
+              className="position-relative"
+              style={{ width: 140, height: 140 }}
+            >
               <Image
                 src={profile.avatar}
                 roundedCircle
@@ -101,7 +113,10 @@ function ProfilePage() {
                 {profile.year ? ` · ${profile.year}` : ''}
               </p>
               {profile.bio && (
-                <p className="mb-2 text-body-secondary" style={{ maxWidth: 560 }}>
+                <p
+                  className="mb-2 text-body-secondary"
+                  style={{ maxWidth: 560 }}
+                >
                   {profile.bio}
                 </p>
               )}
@@ -123,7 +138,10 @@ function ProfilePage() {
 
             <div className="d-flex gap-2">
               {isMe ? (
-                <Button variant="outline-primary" className="d-flex align-items-center gap-2">
+                <Button
+                  variant="outline-primary"
+                  className="d-flex align-items-center gap-2"
+                >
                   <SettingsIcon size={16} /> Chỉnh sửa hồ sơ
                 </Button>
               ) : (
@@ -136,7 +154,10 @@ function ProfilePage() {
                     {following ? <Check size={16} /> : <UserPlus size={16} />}
                     {following ? 'Đang theo dõi' : 'Theo dõi'}
                   </Button>
-                  <Button variant="outline-primary" className="d-flex align-items-center gap-2">
+                  <Button
+                    variant="outline-primary"
+                    className="d-flex align-items-center gap-2"
+                  >
                     <MessageSquare size={16} /> Nhắn tin
                   </Button>
                 </>
@@ -173,7 +194,9 @@ function ProfilePage() {
           <Col lg={4}>
             <Card className="border-0 shadow-sm rounded-4 mb-3">
               <Card.Body>
-                <Card.Title className="fs-6 fw-bold mb-3">Thông tin học thuật</Card.Title>
+                <Card.Title className="fs-6 fw-bold mb-3">
+                  Thông tin học thuật
+                </Card.Title>
                 {[
                   ['Khoa', profile.faculty],
                   ['Ngành', profile.major],
@@ -198,9 +221,12 @@ function ProfilePage() {
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <Card.Title className="fs-6 fw-bold mb-0">
-                    Bạn bè <span className="text-secondary fw-normal">· 384</span>
+                    Bạn bè{' '}
+                    <span className="text-secondary fw-normal">· 384</span>
                   </Card.Title>
-                  <a className="small fw-semibold text-decoration-none">Xem tất cả</a>
+                  <a className="small fw-semibold text-decoration-none">
+                    Xem tất cả
+                  </a>
                 </div>
                 <Row xs={3} className="g-2">
                   {friends.map((f) => (
@@ -212,38 +238,12 @@ function ProfilePage() {
                         className="object-fit-cover"
                         style={{ aspectRatio: '1/1' }}
                       />
-                      <div
-                        className="small text-truncate mt-1"
-                        title={f.name}
-                      >
+                      <div className="small text-truncate mt-1" title={f.name}>
                         {f.name.split(' ').slice(-2).join(' ')}
                       </div>
                     </Col>
                   ))}
                 </Row>
-              </Card.Body>
-            </Card>
-
-            <Card className="border-0 shadow-sm rounded-4">
-              <Card.Body>
-                <Card.Title className="fs-6 fw-bold mb-2">Nhóm đang tham gia</Card.Title>
-                {FAKE_GROUPS.slice(0, 3).map((g) => (
-                  <div
-                    key={g.id}
-                    className="d-flex gap-2 align-items-center py-2 border-bottom"
-                  >
-                    <div
-                      className="rounded flex-shrink-0"
-                      style={{ width: 40, height: 40, background: g.cover }}
-                    />
-                    <div className="flex-grow-1 min-w-0">
-                      <div className="fw-semibold small text-truncate">{g.name}</div>
-                      <div className="text-secondary" style={{ fontSize: 11 }}>
-                        {g.members} thành viên
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </Card.Body>
             </Card>
           </Col>

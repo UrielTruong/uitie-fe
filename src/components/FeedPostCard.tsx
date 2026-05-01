@@ -1,7 +1,7 @@
-import { Card, Button, Image } from 'react-bootstrap'
+import type { Post } from '#/types/post'
+import { Bookmark, Heart, MessageCircle, Share2 } from 'lucide-react'
 import { useState } from 'react'
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react'
-import type { FeedPost } from '#/lib/fake-api'
+import { Button, Card } from 'react-bootstrap'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -14,7 +14,7 @@ function timeAgo(dateStr: string): string {
 }
 
 interface FeedPostCardProps {
-  post: FeedPost
+  post: Post
 }
 
 export default function FeedPostCard({ post }: FeedPostCardProps) {
@@ -26,6 +26,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
     setLiked((prev) => !prev)
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1))
   }
+  console.log(post)
 
   return (
     <Card className="mb-4 shadow-sm border-0 rounded-4">
@@ -33,19 +34,17 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         {/* Author */}
         <div className="d-flex justify-content-between align-items-start mb-3">
           <div className="d-flex align-items-center gap-3">
-            <Image
-              src={post.author.avatar}
-              alt={post.author.name}
-              roundedCircle
-              width={48}
-              height={48}
-              className="object-fit-cover border border-2 text-secondary"
-            />
+            <div
+              className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary flex-shrink-0"
+              style={{ width: '40px', height: '40px' }}
+            >
+              <span className="text-secondary small">
+                {post.author.full_name?.charAt(0).toUpperCase() ?? '?'}
+              </span>
+            </div>
             <div>
-              <h6 className="mb-0 fw-bold">{post.author.name}</h6>
-              <div className="text-muted small">
-                {post.author.handle} &middot; {timeAgo(post.createdAt)}
-              </div>
+              <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
+              <div className="text-muted small">{timeAgo(post.created_at)}</div>
             </div>
           </div>
         </div>
@@ -61,20 +60,29 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           <Button
             variant="link"
             className={`d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 ${liked ? 'text-danger bg-danger bg-opacity-10' : 'text-secondary hover-bg-danger-subtle'}`}
-            onClick={toggleLike}
+            // onClick={toggleLike}
           >
-            <Heart size={18} className={liked ? 'fill-danger text-danger' : ''} />
+            <Heart
+              size={18}
+              className={liked ? 'fill-danger text-danger' : ''}
+            />
             <span className="small fw-medium">{likeCount}</span>
           </Button>
 
           {/* Comment */}
-          <Button variant="link" className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary">
+          <Button
+            variant="link"
+            className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
+          >
             <MessageCircle size={18} />
             <span className="small fw-medium">{post.comments}</span>
           </Button>
 
           {/* Share */}
-          <Button variant="link" className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary">
+          <Button
+            variant="link"
+            className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
+          >
             <Share2 size={18} />
             <span className="small fw-medium">{post.shares}</span>
           </Button>
@@ -85,7 +93,10 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             onClick={() => setBookmarked((p) => !p)}
             className={`ms-auto d-flex align-items-center text-decoration-none p-2 rounded-3 ${bookmarked ? 'text-warning bg-warning bg-opacity-10' : 'text-secondary hover-bg-warning-subtle'}`}
           >
-            <Bookmark size={18} className={bookmarked ? 'fill-warning text-warning' : ''} />
+            <Bookmark
+              size={18}
+              className={bookmarked ? 'fill-warning text-warning' : ''}
+            />
           </Button>
         </div>
       </Card.Body>
