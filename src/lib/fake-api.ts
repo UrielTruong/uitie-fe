@@ -220,9 +220,18 @@ const FAKE_FEED_POSTS: FeedPost[] = [
   },
 ]
 
-export async function fakeFetchFeed(): Promise<FeedPost[]> {
-  await delay(400)
-  return FAKE_FEED_POSTS
+export type Category = {
+  id: number
+  category_name: string
+}
+
+export const fakeFetchFeed = async (): Promise<Category[]> => {
+  return [
+    { id: 1, category_name: 'Học tập' },
+    { id: 2, category_name: 'Hành chính' },
+    { id: 3, category_name: 'Hướng nghiệp' },
+    { id: 4, category_name: 'Đời sống' },
+  ]
 }
 
 // ─── Sidebar data ─────────────────────────────────────────────────────────────
