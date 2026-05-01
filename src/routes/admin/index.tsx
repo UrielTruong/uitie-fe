@@ -1,26 +1,75 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Card } from 'react-bootstrap'
-import { Users, FileText, Flag, TrendingUp } from 'lucide-react'
+import { Button, Card } from 'react-bootstrap'
+import { Users, FileText, Flag, TrendingUp, FileDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { exportStatisticsPdf } from '#/api/useAdmin'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/admin/')({
   component: AdminOverviewPage,
 })
 
 const STATS = [
-  { key: 'admin_stat_users', value: '1,284', icon: Users, to: '/admin/users', color: 'text-primary' },
-  { key: 'admin_stat_posts', value: '5,612', icon: FileText, to: '/admin/posts', color: 'text-success' },
-  { key: 'admin_stat_reports', value: '23', icon: Flag, to: '/admin/reports', color: 'text-danger' },
-  { key: 'admin_stat_active', value: '342', icon: TrendingUp, to: '/admin', color: 'text-warning' },
+  {
+    key: 'admin_stat_users',
+    value: '1,284',
+    icon: Users,
+    to: '/admin/users',
+    color: 'text-primary',
+  },
+  {
+    key: 'admin_stat_posts',
+    value: '5,612',
+    icon: FileText,
+    to: '/admin/posts',
+    color: 'text-success',
+  },
+  {
+    key: 'admin_stat_reports',
+    value: '23',
+    icon: Flag,
+    to: '/admin/reports',
+    color: 'text-danger',
+  },
+  {
+    key: 'admin_stat_active',
+    value: '342',
+    icon: TrendingUp,
+    to: '/admin',
+    color: 'text-warning',
+  },
 ] as const
 
 function AdminOverviewPage() {
   const { t } = useTranslation()
+  const { isExporting, setIsExporting } = useState(false)
+
+  const handleExportPdf = async () => {
+    setIsExporting(true)
+    try {
+      await exportStatisticsPdf()
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   return (
     <div className="container py-4 px-3" style={{ maxWidth: '1100px' }}>
-      <h4 className="fw-bold mb-1">{t('admin_overview_title')}</h4>
-      <p className="text-secondary mb-4">{t('admin_overview_subtitle')}</p>
+      <div className="d-flex justify-content-between align-items-center">
+        <div>
+          <h4 className="fw-bold mb-1">{t('admin_overview_title')}</h4>
+          <p className="text-secondary mb-4">{t('admin_overview_subtitle')}</p>
+        </div>
+        <Button
+          variant="outline-danger"
+          className="d-flex align-items-center gap-2"
+          onClick={handleExportPdf}
+          disabled={isExporting}
+        >
+          <FileDown size={18} />
+          <span>{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+        </Button>
+      </div>
 
       <div className="row g-3">
         {STATS.map(({ key, value, icon: Icon, to, color }) => (
