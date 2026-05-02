@@ -106,5 +106,12 @@
   "admin_reports_search_placeholder": "Search reports...",
   "admin_reports_no_result": "No reports found.",
   "admin_reports_col_action": "Action",
-  "admin_reports_col_reported_object": "Reported object"
+  "admin_reports_col_reported_object": "Reported object",
+  "admin_posts_col_no": "No",
+  "admin_posts_col_author": "Author",
+  "admin_posts_col_content": "Content",
+  "admin_posts_col_category": "Category",
+  "admin_posts_col_visibility": "Visibility",
+  "admin_posts_col_status": "Status",
+  "admin_posts_col_action": "Action"
 }
