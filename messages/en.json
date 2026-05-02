@@ -113,5 +113,6 @@
   "admin_posts_col_category": "Category",
   "admin_posts_col_visibility": "Visibility",
   "admin_posts_col_status": "Status",
-  "admin_posts_col_action": "Action"
+  "admin_posts_col_action": "Action",
+  "admin_stat_by_category": "Post by category"
 }

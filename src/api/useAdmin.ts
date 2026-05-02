@@ -1,6 +1,7 @@
 import axiosClient from '#/api/axiosClient'
 import type { Post, ValidatePostRequest } from '#/types/post'
 import type { Response } from '#/types/response'
+import type { Statistics } from '#/types/statistic'
 import type { CreateUserRequest, UpdateUserRequest, User } from '#/types/user'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -189,6 +190,14 @@ export function useValidatePost() {
       toast.success('Post validated successfully')
       // queryClient.invalidateQueries({ queryKey: ['post-list'] })
     },
+  })
+}
+
+//get statistics
+export function useGetStatistics() {
+  return useQuery({
+    queryKey: ['statistics'],
+    queryFn: () => axiosClient.get<Statistics>('/admin/statistic'),
   })
 }
 

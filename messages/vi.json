@@ -116,5 +116,6 @@
   "admin_posts_col_category": "Danh mục",
   "admin_posts_col_visibility": "Hiển thị",
   "admin_posts_col_status": "Trạng thái",
-  "admin_posts_col_action": "Hành động"
+  "admin_posts_col_action": "Hành động",
+  "admin_stat_by_category": "Bài đăng theo danh mục"
 }
