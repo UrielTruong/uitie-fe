@@ -3,6 +3,12 @@ export interface CreatePostPayload {
     visibility?: 'Public' | 'Private'
     category_id?: number
   }
+
+  export interface UpdatePostPayload {
+    content?: string
+    visibility?: 'Public' | 'Private'
+    category_id?: number
+  }
   
   export interface Post {
     id: number
@@ -11,6 +17,7 @@ export interface CreatePostPayload {
     status: 'Pending' | 'Accepted' | 'Rejected'
     is_edited: boolean
     created_at: string
+    updated_at: string
     author: {
       id: number
       full_name: string
