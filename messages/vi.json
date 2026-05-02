@@ -117,5 +117,12 @@
   "admin_posts_col_visibility": "Hiển thị",
   "admin_posts_col_status": "Trạng thái",
   "admin_posts_col_action": "Hành động",
-  "admin_stat_by_category": "Bài đăng theo danh mục"
+  "admin_stat_by_category": "Bài đăng theo danh mục",
+  "admin_users_col_status": "Trạng thái",
+  "admin_users_col_action": "Hành động",
+  "admin_users_add_user": "Thêm người dùng",
+  "admin_users_col_name": "Tên",
+  "admin_users_col_email": "Email",
+  "admin_users_col_role": "Vai trò",
+  "admin_users_empty": "Không có người dùng."
 }

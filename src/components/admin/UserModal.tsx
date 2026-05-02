@@ -62,9 +62,6 @@ const UserModal = ({ visible, onClose, user }: Props) => {
 
     action
       .then(() => {
-        toast.success(
-          isEditMode ? 'Cập nhật thành công' : 'Tạo người dùng thành công',
-        )
         onClose()
       })
       .catch((error) => {
