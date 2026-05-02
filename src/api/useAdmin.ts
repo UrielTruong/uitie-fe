@@ -1,89 +1,48 @@
 import axiosClient from '#/api/axiosClient'
+import { createAdminUser, getAdminUserList, updateAdminUser } from '#/api/userApi'
 import type { Post, ValidatePostRequest } from '#/types/post'
 import type { Response } from '#/types/response'
 import type { Statistics } from '#/types/statistic'
-import type { CreateUserRequest, UpdateUserRequest, User } from '#/types/user'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import type { CreateUserRequest, UpdateUserRequest } from '#/types/user'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
-
-const mockData = {
-  data: {
-    users: [
-        {
-          id: '1',
-          email: 'admin@example.com',
-          full_name: 'Admin',
-          role: 'ADMIN',
-          status: 'Active',
-        },
-        {
-          id: '2',
-          email: 'user@example.com',
-          full_name: 'User',
-          role: 'STUDENT',
-          status: 'Active',
-        },
-        {
-          id: '3',
-          email: 'superadmin@example.com',
-          full_name: 'Super Admin',
-          role: 'SUPER_ADMIN',
-          status: 'Active',
-        },
-        {
-          id: '4',
-          email: 'student@example.com',
-          full_name: 'Student',
-          role: 'STUDENT',
-          status: 'Active',
-        },
-        {
-          id: '5',
-          email: 'student@example.com',
-          full_name: 'Student',
-          role: 'STUDENT',
-          status: 'Active',
-        },
-    ],
-  },
-}
-export function useGetUserList() {
+export function useGetUserList(search?: string) {
   return useQuery({
-    queryKey: ['user-list'],
-    // queryFn: () => axiosClient.get<Response<User[]>>('/admin/users'),
-
-    queryFn: () => ({ data: mockData }),
+    queryKey: ['user-list', search],
+    queryFn: () => getAdminUserList(search),
   })
 }
 
 export function useCreateUser() {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreateUserRequest) => axiosClient.post<Response<undefined>>('/admin/users', payload),
-    onSuccess: (data) => {
-      toast.success('User created successfully')
-      // queryClient.invalidateQueries({ queryKey: ['user-list'] })
+    mutationFn: (payload: CreateUserRequest) => createAdminUser(payload),
+    onSuccess: () => {
+      toast.success('Tạo người dùng thành công')
+      queryClient.invalidateQueries({ queryKey: ['user-list'] })
     },
   })
 }
 
 export function useUpdateUser() {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: UpdateUserRequest) => axiosClient.put<Response<undefined>>(`/admin/users/${payload.id}`, payload),
-    onSuccess: (data) => {
-      toast.success('User updated successfully')
-      // queryClient.invalidateQueries({ queryKey: ['user-list'] })
+    mutationFn: ({ id, ...payload }: UpdateUserRequest) => updateAdminUser(id, payload),
+    onSuccess: () => {
+      toast.success('Cập nhật thành công')
+      queryClient.invalidateQueries({ queryKey: ['user-list'] })
     },
   })
 }
 
-//delete user
 export function useDeleteUser() {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => axiosClient.delete<Response<undefined>>(`/admin/users/${id}`),
-    onSuccess: (data) => {
-      toast.success('User deleted successfully')
-      // queryClient.invalidateQueries({ queryKey: ['user-list'] })
+    mutationFn: (id: string) => axiosClient.delete<Response<undefined>>(`/admin/users/${id}`).then((res) => res.data),
+    onSuccess: () => {
+      toast.success('Xóa người dùng thành công')
+      queryClient.invalidateQueries({ queryKey: ['user-list'] })
     },
   })
 }

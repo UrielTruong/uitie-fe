@@ -114,5 +114,12 @@
   "admin_posts_col_visibility": "Visibility",
   "admin_posts_col_status": "Status",
   "admin_posts_col_action": "Action",
-  "admin_stat_by_category": "Post by category"
+  "admin_stat_by_category": "Post by category",
+  "admin_users_col_status": "Status",
+  "admin_users_col_action": "Action",
+  "admin_users_add_user": "Add user",
+  "admin_users_col_name": "Name",
+  "admin_users_col_email": "Email",
+  "admin_users_col_role": "Role",
+  "admin_users_empty": "No users found."
 }

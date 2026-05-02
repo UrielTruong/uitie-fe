@@ -1,9 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Card, Spinner, Table, Badge, Button } from 'react-bootstrap'
+import {
+  Card,
+  Spinner,
+  Table,
+  Badge,
+  Button,
+  Form,
+  InputGroup,
+} from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 import { exportUsersPdf, useGetUserList } from '#/api/useAdmin'
-import { FileDown, Pencil, Plus, Trash } from 'lucide-react'
-import { useState } from 'react'
+import { FileDown, Pencil, Plus, Search, Trash } from 'lucide-react'
+import React, { useState } from 'react'
 import UserModal from '#/components/admin/UserModal'
 import type { User } from '#/types/user'
 import ConfirmDeleteUserModal from '#/components/admin/ConfirmDeleteUser'
@@ -14,8 +22,10 @@ export const Route = createFileRoute('/admin/users')({
 
 function AdminUsersPage() {
   const { t } = useTranslation()
-  const { data, isLoading, isError } = useGetUserList()
-  const users = data?.data?.data.users ?? []
+  const [search, setSearch] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const { data, isLoading, isError } = useGetUserList(searchQuery)
+  const users = data?.data ?? []
 
   const [userModalVisible, setUserModalVisible] = useState(false)
   const [confirmDeleteUserModal, setConfirmDeleteUserModal] = useState<
@@ -57,6 +67,11 @@ function AdminUsersPage() {
     }
   }
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSearchQuery(search)
+  }
+
   return (
     <div className="container py-4 px-3" style={{ maxWidth: '1100px' }}>
       <div className="d-flex justify-content-between align-items-center">
@@ -85,6 +100,19 @@ function AdminUsersPage() {
           </Button>
         </div>
       </div>
+
+      <Form onSubmit={handleSearch} className="mb-3">
+        {/* <InputGroup style={{ maxWidth: '360px' }}>
+          <Form.Control
+            placeholder="Tìm kiếm người dùng..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Button variant="outline-secondary" type="submit">
+            <Search size={16} />
+          </Button>
+        </InputGroup> */}
+      </Form>
 
       <Card className="border-0 shadow-sm rounded-4">
         <Card.Body className="p-0">
@@ -139,13 +167,13 @@ function AdminUsersPage() {
                         >
                           <Pencil size={18} />
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="link"
                           className="text-decoration-none p-2 rounded-3 text-secondary"
                           onClick={() => handleOpenConfirmDeleteUser(u as User)}
                         >
                           <Trash size={18} />
-                        </Button>
+                        </Button> */}
                       </td>
                     </tr>
                   ))
