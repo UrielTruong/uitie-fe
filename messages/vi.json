@@ -99,5 +99,15 @@
   "dashboard_search_posts": "Bài viết",
   "dashboard_search_users": "Người dùng",
   "dashboard_search_posts_count": "Bài viết",
-  "dashboard_search_users_count": "Người dùng"
+  "dashboard_search_users_count": "Người dùng",
+  "admin_reports_col_id": "ID",
+  "admin_reports_col_reporter": "Người báo cáo",
+  "admin_reports_col_reason": "Lý do",
+  "admin_reports_col_type": "Loại",
+  "admin_reports_col_status": "Trạng thái",
+  "admin_reports_col_date": "Ngày",
+  "admin_reports_search_placeholder": "Tìm kiếm báo cáo...",
+  "admin_reports_no_result": "Không tìm thấy báo cáo.",
+  "admin_reports_col_action": "Hành động",
+  "admin_reports_col_reported_object": "Đối tượng báo cáo"
 }
