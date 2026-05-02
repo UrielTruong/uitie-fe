@@ -1,6 +1,7 @@
-import { useGetPostList, useValidatePost } from '#/api/useAdmin'
+import { exportPostsPdf, useGetPostList, useValidatePost } from '#/api/useAdmin'
 import { createFileRoute } from '@tanstack/react-router'
-import { Check, X } from 'lucide-react'
+import { Check, FileDown, X } from 'lucide-react'
+import { useState } from 'react'
 import { Badge, Button, Card, Spinner, Table } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -24,6 +25,17 @@ function AdminPostsPage() {
   const { t } = useTranslation()
 
   const { data, isLoading, isError } = useGetPostList()
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExportPdf = async () => {
+    setIsExporting(true)
+    try {
+      await exportPostsPdf()
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const posts = data?.data?.data?.posts ?? []
 
   const { mutate: validatePost, isPending: isValidating } = useValidatePost()
@@ -45,8 +57,21 @@ function AdminPostsPage() {
   return (
     <div className="container py-4 px-3" style={{ maxWidth: '1100px' }}>
       <div className="mb-4">
-        <h4 className="fw-bold mb-1">{t('admin_posts_title')}</h4>
-        <p className="text-secondary mb-0">{t('admin_posts_subtitle')}</p>
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <h4 className="fw-bold mb-1">{t('admin_posts_title')}</h4>
+            <p className="text-secondary mb-4">{t('admin_posts_subtitle')}</p>
+          </div>
+          <Button
+            variant="outline-danger"
+            className="d-flex align-items-center gap-2"
+            onClick={handleExportPdf}
+            disabled={isExporting}
+          >
+            <FileDown size={18} />
+            <span>{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+          </Button>
+        </div>
       </div>
 
       <Card className="border-0 shadow-sm rounded-4">
