@@ -13,7 +13,7 @@ export const Route = createFileRoute('/admin/reports')({
 const STATUS_VARIANT: Record<string, string> = {
   Pending: 'warning',
   Resolved: 'success',
-  Rejected: 'secondary',
+  Dismissed: 'secondary',
 }
 
 function AdminReportsPage() {

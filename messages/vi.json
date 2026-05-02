@@ -109,5 +109,12 @@
   "admin_reports_search_placeholder": "Tìm kiếm báo cáo...",
   "admin_reports_no_result": "Không tìm thấy báo cáo.",
   "admin_reports_col_action": "Hành động",
-  "admin_reports_col_reported_object": "Đối tượng báo cáo"
+  "admin_reports_col_reported_object": "Đối tượng báo cáo",
+  "admin_posts_col_no": "STT",
+  "admin_posts_col_author": "Người đăng",
+  "admin_posts_col_content": "Nội dung",
+  "admin_posts_col_category": "Danh mục",
+  "admin_posts_col_visibility": "Hiển thị",
+  "admin_posts_col_status": "Trạng thái",
+  "admin_posts_col_action": "Hành động"
 }

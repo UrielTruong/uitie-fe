@@ -32,3 +32,8 @@ export interface CreatePostPayload {
     shares: number
     liked: boolean
   }
+
+export interface ValidatePostRequest {
+  id: number
+  status: 'Accepted' | 'Rejected'
+}

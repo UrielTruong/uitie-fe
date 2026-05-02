@@ -1,4 +1,5 @@
 import axiosClient from '#/api/axiosClient'
+import type { Post, ValidatePostRequest } from '#/types/post'
 import type { Response } from '#/types/response'
 import type { CreateUserRequest, UpdateUserRequest, User } from '#/types/user'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -141,3 +142,53 @@ export async function exportStatisticsPdf(): Promise<void> {
   link.click()
   URL.revokeObjectURL(url)
 }
+
+const mockPostData = {
+  data: {
+    posts: [
+      {
+        id: 1,
+        title: 'Post 1',
+        content: 'Content 1',
+        created_at: '2021-01-01',
+        updated_at: '2021-01-01',
+        author: {
+          id: 1,
+          full_name: 'Author 1',
+          email: 'author1@example.com',
+        },
+        category: {
+          id: 1,
+          category_name: 'Category 1',
+        },
+        status: 'Pending',
+        visibility: 'Public',
+        is_edited: false,
+        likes: 10,
+        comments: 5,
+        shares: 2,
+        liked: false,
+      },
+    ],
+  },
+}
+//get list posts
+export function useGetPostList() {
+  return useQuery({
+    queryKey: ['post-list'],
+    // queryFn: () => axiosClient.get<Response<Post[]>>('/admin/posts'),
+    queryFn: () => ({ data: mockPostData }),
+  })
+}
+
+//validate post
+export function useValidatePost() {
+  return useMutation({
+    mutationFn: (payload: ValidatePostRequest) => axiosClient.put<Response<undefined>>(`/admin/posts/${payload.id}/validate`, payload),
+    onSuccess: (data) => {
+      toast.success('Post validated successfully')
+      // queryClient.invalidateQueries({ queryKey: ['post-list'] })
+    },
+  })
+}
+
