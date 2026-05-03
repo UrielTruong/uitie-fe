@@ -4,9 +4,9 @@ import type { User } from '#/types/user'
 import UserAvatar from './UserAvatar'
 
 const ROLE_ICON: Record<User['role'], React.ReactNode> = {
-  SUPER_ADMIN: <ShieldCheck size={14} />,
-  ADMIN: <Lock size={14} />,
-  STUDENT: <UserRound size={14} />,
+  'Super Admin': <ShieldCheck size={14} />,
+  Admin: <Lock size={14} />,
+  Student: <UserRound size={14} />,
 }
 
 interface UserCardProps {

@@ -25,25 +25,25 @@ const NAV_ITEMS: ReadonlyArray<{
     key: 'admin_nav_overview',
     icon: LayoutDashboard,
     to: '/admin',
-    roles: ['ADMIN', 'SUPER_ADMIN'],
+    roles: ['Admin', 'Super Admin'],
   },
   {
     key: 'admin_nav_users',
     icon: Users,
     to: '/admin/users',
-    roles: ['SUPER_ADMIN'],
+    roles: ['Super Admin'],
   },
   {
     key: 'admin_nav_posts',
     icon: FileText,
     to: '/admin/posts',
-    roles: ['ADMIN', 'SUPER_ADMIN'],
+    roles: ['Admin', 'Super Admin'],
   },
   {
     key: 'admin_nav_reports',
     icon: Flag,
     to: '/admin/reports',
-    roles: ['ADMIN', 'SUPER_ADMIN'],
+    roles: ['Admin', 'Super Admin'],
   },
 ]
 
@@ -123,9 +123,9 @@ export default function AdminSidebar({ className = '' }: AdminSidebarProps) {
               {mounted ? (user?.full_name ?? '') : ''}
             </p>
             <p className="mb-0 text-danger small text-truncate fw-semibold">
-              {role === 'SUPER_ADMIN'
+              {role === 'Super Admin'
                 ? t('admin_role_super_admin')
-                : role === 'ADMIN'
+                : role === 'Admin'
                   ? t('admin_role_admin')
                   : t('admin_role_student')}
             </p>

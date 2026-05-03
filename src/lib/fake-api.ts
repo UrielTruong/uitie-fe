@@ -58,7 +58,7 @@ const fakeUsers: Map<string, { password: string; user: User }> = new Map([
         id: 'usr_1',
         email: 'demo@uitie.io',
         full_name: 'Demo User',
-        role: 'STUDENT',
+        role: 'Student',
         status: 'Active',
       },
     },
@@ -97,7 +97,7 @@ export async function fakeRegister(
     id,
     email: emailLower,
     full_name: name,
-    role: 'STUDENT',
+    role: 'Student',
     status: 'Active',
   }
   fakeUsers.set(emailLower, { password, user })

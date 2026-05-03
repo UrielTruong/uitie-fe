@@ -19,7 +19,7 @@ export function useLogin() { // -> hook, call api, quản lí state, data, loadi
         return
       }
       setAuth(data.data.data.token, data.data.data.user)
-      if(data.data.data.user.role === 'ADMIN' || data.data.data.user.role === 'SUPER_ADMIN') {
+      if(data.data.data.user.role === 'Admin' || data.data.data.user.role === 'Super Admin') {
         navigate({ to: '/admin' })
         return
       }

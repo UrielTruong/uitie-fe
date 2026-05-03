@@ -34,7 +34,7 @@ export default function DashboardSidebar({
   const navigate = useNavigate()
   const user = useStore(authStore, (s) => s.user)
   const [mounted, setMounted] = useState(false)
-  const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  const isAdminUser = user?.role === 'Admin' || user?.role === 'Super Admin'
 
   useEffect(() => {
     setMounted(true)

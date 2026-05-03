@@ -41,11 +41,11 @@ export function isAuthenticated(): boolean {
 
 export function isAdmin(): boolean {
   const role = authStore.state.user?.role
-  return role === 'ADMIN' || role === 'SUPER_ADMIN'
+  return role === 'Admin' || role === 'Super Admin'
 }
 
 export function isSuperAdmin(): boolean {
-  return authStore.state.user?.role === 'SUPER_ADMIN'
+  return authStore.state.user?.role === 'Super Admin'
 }
 
 export function setAuth(token: string, user: User): void {

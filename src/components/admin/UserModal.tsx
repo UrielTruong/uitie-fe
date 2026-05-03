@@ -11,7 +11,7 @@ type Props = {
 }
 
 const DEFAULT_FORM: CreateUserRequest = {
-  role: 'STUDENT',
+  role: 'Student',
   email: '',
   full_name: '',
   status: 'Active',
@@ -94,9 +94,9 @@ const UserModal = ({ visible, onClose, user }: Props) => {
                   value={formData.role}
                   onChange={handleChange}
                 >
-                  <option value="STUDENT">Sinh viên</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value="Student">Sinh viên</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Super Admin">Super Admin</option>
                 </Form.Select>
               </Form.Group>
 

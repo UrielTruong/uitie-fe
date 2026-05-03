@@ -28,9 +28,9 @@ function AdminUsersPage() {
   const users = data?.data ?? []
 
   const ROLE_VARIANT: Record<UserRole, string> = {
-    SUPER_ADMIN: 'danger',
-    ADMIN: 'warning',
-    STUDENT: 'secondary',
+    'Super Admin': 'danger',
+    Admin: 'warning',
+    Student: 'secondary',
   }
 
   const STATUS_VARIANT: Record<UserStatus, string> = {
@@ -161,7 +161,7 @@ function AdminUsersPage() {
                         <Badge
                           bg={ROLE_VARIANT[u.role as UserRole] ?? 'secondary'}
                         >
-                          {u.role ?? 'STUDENT'}
+                          {u.role ?? 'Student'}
                         </Badge>
                       </td>
                       <td>
