@@ -13,7 +13,7 @@ import { exportUsersPdf, useGetUserList } from '#/api/useAdmin'
 import { FileDown, Pencil, Plus, Search, Trash } from 'lucide-react'
 import React, { useState } from 'react'
 import UserModal from '#/components/admin/UserModal'
-import type { User } from '#/types/user'
+import type { User, UserRole, UserStatus } from '#/types/user'
 import ConfirmDeleteUserModal from '#/components/admin/ConfirmDeleteUser'
 
 export const Route = createFileRoute('/admin/users')({
@@ -26,6 +26,18 @@ function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const { data, isLoading, isError } = useGetUserList(searchQuery)
   const users = data?.data ?? []
+
+  const ROLE_VARIANT: Record<UserRole, string> = {
+    SUPER_ADMIN: 'danger',
+    ADMIN: 'warning',
+    STUDENT: 'secondary',
+  }
+
+  const STATUS_VARIANT: Record<UserStatus, string> = {
+    Active: 'success',
+    Inactive: 'secondary',
+    Locked: 'secondary',
+  }
 
   const [userModalVisible, setUserModalVisible] = useState(false)
   const [confirmDeleteUserModal, setConfirmDeleteUserModal] = useState<
@@ -147,18 +159,21 @@ function AdminUsersPage() {
                       <td>{u.email}</td>
                       <td>
                         <Badge
-                          bg={
-                            u.role === 'SUPER_ADMIN'
-                              ? 'dark'
-                              : u.role === 'ADMIN'
-                                ? 'danger'
-                                : 'secondary'
-                          }
+                          bg={ROLE_VARIANT[u.role as UserRole] ?? 'secondary'}
                         >
                           {u.role ?? 'STUDENT'}
                         </Badge>
                       </td>
-                      <td>{u.status ?? 'Active'}</td>
+                      <td>
+                        <Badge
+                          bg={
+                            STATUS_VARIANT[u.status as UserStatus] ??
+                            'secondary'
+                          }
+                        >
+                          {u.status ?? 'Active'}
+                        </Badge>
+                      </td>
                       <td>
                         <Button
                           variant="link"

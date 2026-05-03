@@ -1,6 +1,7 @@
 import type { User, CreateUserRequest, UpdateUserRequest } from "#/types/user"
 import type { Pagination, Response } from "#/types/response"
 import axiosClient from "./axiosClient"
+import type { Post } from "#/types/post"
 
 export const searchUser = async (keyword?: string): Promise<Pagination<User[]>> => {
   const res = await axiosClient.get<Pagination<User[]>>('/user/search', { params: { keyword } })
@@ -19,5 +20,10 @@ export const createAdminUser = async (payload: CreateUserRequest): Promise<Respo
 
 export const updateAdminUser = async (id: string, payload: Omit<UpdateUserRequest, 'id'>): Promise<Response<undefined>> => {
   const res = await axiosClient.put<Response<undefined>>(`/super-admin/user/${id}`, payload)
+  return res.data
+}
+
+export const getAdminPostList = async (search?: string): Promise<Response<Post[]>> => {
+  const res = await axiosClient.get<Response<Post[]>>('/admin/post', { params: search ? { search } : undefined })
   return res.data
 }
