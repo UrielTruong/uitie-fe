@@ -16,6 +16,11 @@ const STATUS_VARIANT: Record<string, string> = {
   Dismissed: 'secondary',
 }
 
+const TYPE_VARIANT: Record<string, string> = {
+  Post: 'primary',
+  User: 'danger',
+}
+
 function AdminReportsPage() {
   const { t } = useTranslation()
   const [isExporting, setIsExporting] = useState(false)
@@ -104,7 +109,7 @@ function AdminReportsPage() {
                       </td>
                       <td>{r.reason}</td>
                       <td>
-                        <Badge bg="info" text="dark">
+                        <Badge bg={TYPE_VARIANT[r.target_type] ?? 'secondary'}>
                           {r.target_type}
                         </Badge>
                       </td>
