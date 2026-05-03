@@ -1,5 +1,5 @@
 import axiosClient from '#/api/axiosClient'
-import { createAdminUser, getAdminUserList, updateAdminUser } from '#/api/userApi'
+import { createAdminUser, getAdminPostList, getAdminUserList, updateAdminUser } from '#/api/userApi'
 import type { Post, ValidatePostRequest } from '#/types/post'
 import type { Response } from '#/types/response'
 import type { Statistics } from '#/types/statistic'
@@ -7,6 +7,8 @@ import type { CreateUserRequest, UpdateUserRequest } from '#/types/user'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
+
+//Super admin manage users
 export function useGetUserList(search?: string) {
   return useQuery({
     queryKey: ['user-list', search],
@@ -103,41 +105,13 @@ export async function exportStatisticsPdf(): Promise<void> {
   URL.revokeObjectURL(url)
 }
 
-const mockPostData = {
-  data: {
-    posts: [
-      {
-        id: 1,
-        title: 'Post 1',
-        content: 'Content 1',
-        created_at: '2021-01-01',
-        updated_at: '2021-01-01',
-        author: {
-          id: 1,
-          full_name: 'Author 1',
-          email: 'author1@example.com',
-        },
-        category: {
-          id: 1,
-          category_name: 'Category 1',
-        },
-        status: 'Pending',
-        visibility: 'Public',
-        is_edited: false,
-        likes: 10,
-        comments: 5,
-        shares: 2,
-        liked: false,
-      },
-    ],
-  },
-}
+
+//Admin manage posts
 //get list posts
 export function useGetPostList() {
   return useQuery({
     queryKey: ['post-list'],
-    // queryFn: () => axiosClient.get<Response<Post[]>>('/admin/posts'),
-    queryFn: () => ({ data: mockPostData }),
+    queryFn: () => getAdminPostList(),
   })
 }
 

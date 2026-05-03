@@ -21,6 +21,20 @@ const VISIBILITY_VARIANT: Record<string, string> = {
   Private: 'secondary',
 }
 
+const CATEGORY_NAME: Record<number, string> = {
+  1: 'Học tập',
+  2: 'Hành chính',
+  3: 'Hướng nghiệp',
+  4: 'Đời sống',
+}
+
+const CATEGORY_VARIANT: Record<number, string> = {
+  1: 'primary',
+  2: 'secondary',
+  3: 'success',
+  4: 'danger',
+}
+
 function AdminPostsPage() {
   const { t } = useTranslation()
 
@@ -36,7 +50,7 @@ function AdminPostsPage() {
     }
   }
 
-  const posts = data?.data?.data?.posts ?? []
+  const posts = data?.data ?? []
 
   const { mutate: validatePost, isPending: isValidating } = useValidatePost()
 
@@ -118,7 +132,16 @@ function AdminPostsPage() {
                           {p.content ?? '—'}
                         </span>
                       </td>
-                      <td>{p.category?.category_name ?? '—'}</td>
+                      {/* show category name */}
+                      <td>
+                        <Badge
+                          bg={
+                            CATEGORY_VARIANT[p.category?.id ?? 0] ?? 'secondary'
+                          }
+                        >
+                          {CATEGORY_NAME[p.category?.id ?? 0] ?? '—'}
+                        </Badge>
+                      </td>
                       <td>
                         <Badge
                           bg={VISIBILITY_VARIANT[p.visibility] ?? 'secondary'}
