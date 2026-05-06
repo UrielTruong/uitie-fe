@@ -13,6 +13,7 @@ import { useCreatePost } from '../api/usePost'
 import type { CreatePostPayload } from '../types/post'
 import { CATEGORIES } from '#/types/category'
 import toast from 'react-hot-toast'
+import { getUser } from '#/lib/auth'
 
 const VISIBILITY_OPTIONS = [
   { value: 'Public' as const, label: 'Công khai', Icon: Globe },
@@ -51,6 +52,7 @@ export default function CreatePostForm() {
     }
 
     const payload: CreatePostPayload = {
+      user_id: getUser()?.id ?? '',
       content: content.trim() || undefined,
       visibility,
       category_id: categoryId,

@@ -2,6 +2,7 @@ export interface CreatePostPayload {
     content?: string
     visibility?: 'Public' | 'Private'
     category_id?: number
+    user_id: string
   }
 
   export interface UpdatePostPayload {
@@ -36,4 +37,5 @@ export interface CreatePostPayload {
 export interface ValidatePostRequest {
   id: number
   status: 'Accepted' | 'Rejected'
+  reject_reason?: string
 }

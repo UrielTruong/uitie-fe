@@ -2,7 +2,15 @@ import { exportPostsPdf, useGetPostList, useValidatePost } from '#/api/useAdmin'
 import { createFileRoute } from '@tanstack/react-router'
 import { Check, FileDown, X } from 'lucide-react'
 import { useState } from 'react'
-import { Badge, Button, Card, Spinner, Table } from 'react-bootstrap'
+import {
+  Badge,
+  Button,
+  Card,
+  Form,
+  Modal,
+  Spinner,
+  Table,
+} from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -41,6 +49,16 @@ function AdminPostsPage() {
   const { data, isLoading, isError } = useGetPostList()
   const [isExporting, setIsExporting] = useState(false)
 
+  const [rejectModal, setRejectModal] = useState<{
+    show: boolean
+    postId: number | null
+  }>({
+    show: false,
+    postId: null,
+  })
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectReasonError, setRejectReasonError] = useState(false)
+
   const handleExportPdf = async () => {
     setIsExporting(true)
     try {
@@ -62,10 +80,36 @@ function AdminPostsPage() {
   }
 
   const handleReject = (id: number) => {
+    setRejectReason('')
+    setRejectReasonError(false)
+    setRejectModal({ show: true, postId: id })
+  }
+
+  const handleConfirmReject = () => {
+    if (!rejectReason.trim()) {
+      setRejectReasonError(true)
+      return
+    }
+    if (rejectModal.postId === null) return
+
     validatePost(
-      { id, status: 'Rejected' },
-      { onSuccess: () => toast.success('Post rejected') },
+      {
+        id: rejectModal.postId,
+        status: 'Rejected',
+        reject_reason: rejectReason.trim(),
+      },
+      {
+        onSuccess: () => {
+          toast.success('Post rejected')
+          setRejectModal({ show: false, postId: null })
+        },
+      },
     )
+  }
+
+  const handleCloseRejectModal = () => {
+    if (isValidating) return
+    setRejectModal({ show: false, postId: null })
   }
 
   return (
@@ -132,7 +176,6 @@ function AdminPostsPage() {
                           {p.content ?? '—'}
                         </span>
                       </td>
-                      {/* show category name */}
                       <td>
                         <Badge
                           bg={
@@ -186,6 +229,53 @@ function AdminPostsPage() {
           )}
         </Card.Body>
       </Card>
+
+      <Modal show={rejectModal.show} onHide={handleCloseRejectModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Reject Post</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>
+              Reject Reason <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="Enter reason for rejection..."
+              value={rejectReason}
+              onChange={(e) => {
+                setRejectReason(e.target.value)
+                if (e.target.value.trim()) setRejectReasonError(false)
+              }}
+              isInvalid={rejectReasonError}
+            />
+            <Form.Control.Feedback type="invalid">
+              Reject reason is required.
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={handleCloseRejectModal}
+            disabled={isValidating}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleConfirmReject}
+            disabled={isValidating}
+          >
+            {isValidating ? (
+              <Spinner size="sm" animation="border" />
+            ) : (
+              'Confirm Reject'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }
