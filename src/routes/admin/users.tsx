@@ -138,6 +138,7 @@ function AdminUsersPage() {
             <Table responsive hover className="mb-0 align-middle">
               <thead className="bg-body-tertiary">
                 <tr>
+                  <th className="px-4 py-3">{t('admin_users_col_id')}</th>
                   <th className="px-4 py-3">{t('admin_users_col_name')}</th>
                   <th className="py-3">{t('admin_users_col_email')}</th>
                   <th className="py-3">{t('admin_users_col_role')}</th>
@@ -155,6 +156,7 @@ function AdminUsersPage() {
                 ) : (
                   users.map((u) => (
                     <tr key={u.id}>
+                      <td className="px-4">{u.id}</td>
                       <td className="px-4">{u.full_name ?? '—'}</td>
                       <td>{u.email}</td>
                       <td>

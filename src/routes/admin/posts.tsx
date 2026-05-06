@@ -75,7 +75,7 @@ function AdminPostsPage() {
   const handleAccept = (id: number) => {
     validatePost(
       { id, status: 'Accepted' },
-      { onSuccess: () => toast.success('Post accepted') },
+      { onSuccess: () => toast.success(t('admin_posts_accept_success')) },
     )
   }
 
@@ -100,7 +100,7 @@ function AdminPostsPage() {
       },
       {
         onSuccess: () => {
-          toast.success('Post rejected')
+          toast.success(t('admin_posts_reject_success'))
           setRejectModal({ show: false, postId: null })
         },
       },
@@ -232,17 +232,18 @@ function AdminPostsPage() {
 
       <Modal show={rejectModal.show} onHide={handleCloseRejectModal} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Reject Post</Modal.Title>
+          <Modal.Title>{t('admin_posts_reject_modal_title')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group>
             <Form.Label>
-              Reject Reason <span className="text-danger">*</span>
+              {t('admin_posts_reject_modal_reason_label')}{' '}
+              <span className="text-danger">*</span>
             </Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
-              placeholder="Enter reason for rejection..."
+              placeholder={t('admin_posts_reject_modal_reason_placeholder')}
               value={rejectReason}
               onChange={(e) => {
                 setRejectReason(e.target.value)
@@ -251,7 +252,7 @@ function AdminPostsPage() {
               isInvalid={rejectReasonError}
             />
             <Form.Control.Feedback type="invalid">
-              Reject reason is required.
+              {t('admin_posts_reject_modal_reason_required')}
             </Form.Control.Feedback>
           </Form.Group>
         </Modal.Body>
@@ -261,7 +262,7 @@ function AdminPostsPage() {
             onClick={handleCloseRejectModal}
             disabled={isValidating}
           >
-            Cancel
+            {t('admin_posts_reject_modal_cancel')}
           </Button>
           <Button
             variant="danger"
@@ -271,7 +272,7 @@ function AdminPostsPage() {
             {isValidating ? (
               <Spinner size="sm" animation="border" />
             ) : (
-              'Confirm Reject'
+              t('admin_posts_reject_modal_confirm')
             )}
           </Button>
         </Modal.Footer>
