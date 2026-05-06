@@ -100,7 +100,7 @@ function AdminReportsPage() {
                 ) : (
                   reports.map((r) => (
                     <tr key={r.id}>
-                      <td className="px-4">#{r.id}</td>
+                      <td className="px-4">{r.id}</td>
                       <td>
                         {r.reporter?.full_name ?? r.reporter?.email ?? '—'}
                       </td>

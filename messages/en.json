@@ -121,5 +121,14 @@
   "admin_users_col_name": "Name",
   "admin_users_col_email": "Email",
   "admin_users_col_role": "Role",
-  "admin_users_empty": "No users found."
+  "admin_users_empty": "No users found.",
+  "admin_posts_reject_modal_title": "Reject post",
+  "admin_posts_reject_modal_reason_label": "Reject reason",
+  "admin_posts_reject_modal_reason_placeholder": "Enter reject reason",
+  "admin_posts_reject_modal_reason_required": "Reject reason is required",
+  "admin_posts_reject_modal_cancel": "Cancel",
+  "admin_posts_reject_modal_confirm": "Reject",
+  "admin_posts_accept_success": "Post accepted",
+  "admin_posts_reject_success": "Post rejected",
+  "admin_users_col_id": "ID"
 }

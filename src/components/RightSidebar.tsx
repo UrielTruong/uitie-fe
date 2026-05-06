@@ -1,38 +1,27 @@
 import { Button, Image } from 'react-bootstrap'
 import { UserPlus, TrendingUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { FAKE_SUGGESTED_USERS, FAKE_TRENDING } from '#/lib/fake-api'
+import { FAKE_SUGGESTED_USERS, type Category } from '#/lib/fake-api'
+import { CATEGORIES } from '#/types/category'
 
 export default function RightSidebar() {
   const { t } = useTranslation()
   return (
     <aside className="d-flex flex-column gap-4 py-4 px-3">
-      {/* Trending Topics */}
-      <section>
-        <div className="mb-3 d-flex align-items-center gap-2">
-          <TrendingUp className="text-primary" size={18} />
-          <h6 className="mb-0 fw-bold">{t('dashboard_trending')}</h6>
+      {/* Trending Topics
+       */}
+      <div className="mb-3 d-flex align-items-center gap-2">
+        <TrendingUp className="text-primary" size={18} />
+        <h6 className="mb-0 fw-bold">{t('dashboard_trending')}</h6>
+      </div>
+      {CATEGORIES.map((category: Category) => (
+        <div key={category.id} className="d-flex align-items-center gap-2">
+          <h6 className="mb-0 fw-bold">{category.category_name}</h6>
+          <p className="mb-0 text-muted" style={{ fontSize: '0.75rem' }}>
+            {Math.floor(Math.random() * 1000)} posts
+          </p>
         </div>
-        <div className="d-flex flex-column gap-3">
-          {FAKE_TRENDING.map((topic, idx) => (
-            <div
-              key={topic.id}
-              className="d-flex align-items-center justify-content-between"
-              style={{ cursor: 'pointer' }}
-            >
-              <div>
-                <p className="mb-0 text-muted small">
-                  #{idx + 1} &middot; Trending
-                </p>
-                <p className="mb-0 fw-semibold text-dark">{topic.tag}</p>
-                <p className="mb-0 text-muted small">
-                  {topic.posts.toLocaleString()} posts
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      ))}
 
       <hr className="my-1 border-secondary" />
 
