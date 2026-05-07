@@ -144,7 +144,7 @@ function AdminPostsPage() {
             <Table responsive hover className="mb-0 align-middle">
               <thead className="bg-body-tertiary">
                 <tr>
-                  <th className="px-4 py-3">{t('admin_posts_col_no')}</th>
+                  <th className="px-4 py-3">{t('admin_posts_col_id')}</th>
                   <th className="py-3">{t('admin_posts_col_author')}</th>
                   <th className="py-3">{t('admin_posts_col_content')}</th>
                   <th className="py-3">{t('admin_posts_col_category')}</th>
@@ -165,7 +165,7 @@ function AdminPostsPage() {
                 ) : (
                   posts?.map((p, index) => (
                     <tr key={p.id}>
-                      <td className="px-4">{index + 1}</td>
+                      <td className="px-4">{p.id}</td>
                       <td>{p.author?.full_name ?? p.author?.email ?? '—'}</td>
                       <td style={{ maxWidth: '320px' }}>
                         <span
