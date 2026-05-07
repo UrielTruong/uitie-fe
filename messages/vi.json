@@ -100,7 +100,7 @@
   "dashboard_search_users": "Người dùng",
   "dashboard_search_posts_count": "Bài viết",
   "dashboard_search_users_count": "Người dùng",
-  "admin_reports_col_id": "STT",
+  "admin_reports_col_id": "ID",
   "admin_reports_col_reporter": "Người báo cáo",
   "admin_reports_col_reason": "Lý do",
   "admin_reports_col_type": "Loại",
@@ -110,7 +110,7 @@
   "admin_reports_no_result": "Không tìm thấy báo cáo.",
   "admin_reports_col_action": "Hành động",
   "admin_reports_col_reported_object": "Đối tượng báo cáo",
-  "admin_posts_col_no": "STT",
+  "admin_posts_col_id": "ID",
   "admin_posts_col_author": "Người đăng",
   "admin_posts_col_content": "Nội dung",
   "admin_posts_col_category": "Danh mục",
@@ -133,6 +133,6 @@
   "admin_posts_reject_modal_confirm": "Từ chối",
   "admin_posts_accept_success": "Bài đăng đã được chấp nhận",
   "admin_posts_reject_success": "Bài đăng đã được từ chối",
-  "admin_users_col_id": "STT"
+  "admin_users_col_id": "ID"
 
 }
