@@ -25,10 +25,12 @@ const NAV_ITEMS = [
 
 interface DashboardSidebarProps {
   className?: string
+  onClose?: () => void
 }
 
 export default function DashboardSidebar({
   className = '',
+  onClose,
 }: DashboardSidebarProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -41,6 +43,7 @@ export default function DashboardSidebar({
   }, [])
 
   function handleLogout() {
+    onClose?.()
     clearAuth()
     void navigate({ to: '/login' })
   }
@@ -69,6 +72,7 @@ export default function DashboardSidebar({
             <Link
               key={key}
               to={to}
+              onClick={onClose}
               className="d-flex align-items-center gap-3 rounded px-3 py-2 text-decoration-none text-secondary fw-medium border-0 bg-transparent"
               activeProps={{
                 className: 'text-primary bg-primary bg-opacity-10 fw-bold',
@@ -82,6 +86,7 @@ export default function DashboardSidebar({
           {mounted && isAdminUser && (
             <Link
               to="/admin"
+              onClick={onClose}
               className="d-flex align-items-center gap-3 rounded px-3 py-2 text-decoration-none text-danger fw-semibold border-0 bg-transparent mt-2 border-top pt-3"
               activeProps={{
                 className: 'bg-danger bg-opacity-10 fw-bold',

@@ -49,9 +49,13 @@ const NAV_ITEMS: ReadonlyArray<{
 
 interface AdminSidebarProps {
   className?: string
+  onClose?: () => void
 }
 
-export default function AdminSidebar({ className = '' }: AdminSidebarProps) {
+export default function AdminSidebar({
+  className = '',
+  onClose,
+}: AdminSidebarProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const user = useStore(authStore, (s) => s.user)
@@ -66,6 +70,7 @@ export default function AdminSidebar({ className = '' }: AdminSidebarProps) {
   }, [])
 
   function handleLogout() {
+    onClose?.()
     clearAuth()
     void navigate({ to: '/login' })
   }
@@ -85,6 +90,7 @@ export default function AdminSidebar({ className = '' }: AdminSidebarProps) {
             <Link
               key={key}
               to={to}
+              onClick={onClose}
               activeOptions={{ exact: to === '/admin' }}
               className="d-flex align-items-center gap-3 rounded px-3 py-2 text-decoration-none text-secondary fw-medium border-0 bg-transparent"
               activeProps={{
@@ -100,6 +106,7 @@ export default function AdminSidebar({ className = '' }: AdminSidebarProps) {
         <div className="mt-3 border-top pt-3">
           <Link
             to="/dashboard"
+            onClick={onClose}
             className="d-flex align-items-center gap-3 rounded px-3 py-2 text-decoration-none text-secondary fw-medium"
           >
             <ArrowLeftCircle size={20} />
