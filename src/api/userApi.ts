@@ -27,3 +27,8 @@ export const getAdminPostList = async (search?: string): Promise<Response<Post[]
   const res = await axiosClient.get<Response<Post[]>>('/admin/post', { params: search ? { search } : undefined })
   return res.data
 }
+
+export const updateAdminUserStatus = async (id: string, payload: { status: 'Active' | 'Banned'; reason: string }): Promise<Response<undefined>> => {
+  const res = await axiosClient.put<Response<undefined>>(`/super-admin/user/${id}/status`, payload)
+  return res.data
+}
