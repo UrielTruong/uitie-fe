@@ -1,4 +1,5 @@
 import type { Post } from '#/types/post'
+import CommentSection from '@/components/CommentSection'
 import ReportModal from '@/components/ReportModal'
 import {
   Bookmark,
@@ -16,12 +17,15 @@ import {
   Share2,
   Tag,
   Trash2,
+  Paperclip,
+  Send,
+  X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Button, Card, Dropdown, Form, Modal } from 'react-bootstrap'
+import { useEffect, useRef, useState } from 'react'
+import { Button, Card, Dropdown, Form, Modal, Spinner } from 'react-bootstrap'
 import UserAvatar from './UserAvatar'
 import { authStore } from '#/lib/auth'
-import { useDeletePost, useUpdatePost } from '#/api/usePost'
+import { useDeletePost, useUpdatePost, useLikePost, useSharePost, useCreateComment } from '#/api/usePost'
 import { useStore } from '@tanstack/react-store'
 import toast from 'react-hot-toast'
 import { CATEGORIES } from '#/types/category'
@@ -42,11 +46,11 @@ const CATEGORY_ICONS: Record<number, React.ElementType> = {
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m}m ago`
+  if (m < 1) return 'vừa xong'
+  if (m < 60) return `${m} phút trước`
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
+  if (h < 24) return `${h} giờ trước`
+  return `${Math.floor(h / 24)} ngày trước`
 }
 
 interface FeedPostCardProps {
@@ -54,19 +58,26 @@ interface FeedPostCardProps {
 }
 
 export default function FeedPostCard({ post }: FeedPostCardProps) {
-  const [liked, setLiked] = useState(post.liked)
-  const [likeCount, setLikeCount] = useState(post.likes)
-  const [bookmarked, setBookmarked] = useState(false)
-  
-  // Thêm State để ẩn/hiện modal báo cáo
-  const [isReportOpen, setIsReportOpen] = useState(false)
-
   const user = useStore(authStore, (s) => s.user)
-  const { mutate: mutateUpdatePost, isPending: isUpdating } = useUpdatePost()
-  const { mutate: mutateDeletePost, isPending: isDeleting } = useDeletePost()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // ── States ──────────────────────────────────────────────────────────────────
+  const [bookmarked, setBookmarked] = useState(false)
+  const [isReportOpen, setIsReportOpen] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  
+  // States cho Comment mới
+  const [showCommentInput, setShowCommentInput] = useState(false)
+  const [commentText, setCommentText] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  // ── Hooks tương tác mới ─────────────────────────────────────────────────────
+  const { mutate: mutateUpdatePost, isPending: isUpdating } = useUpdatePost()
+  const { mutate: mutateDeletePost, isPending: isDeleting } = useDeletePost()
+  const { mutate: handleLike } = useLikePost()
+  const { mutate: handleShare } = useSharePost()
+  const { mutate: sendComment, isPending: isCommenting } = useCreateComment()
 
   // ── edit form state ─────────────────────────────────────────────────────────
   const [editContent, setEditContent] = useState('')
@@ -80,7 +91,35 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
       setVisibility((post.visibility as 'Public' | 'Private') ?? 'Public')
       setCategoryId(post.category?.id ?? '')
     }
-  }, [showEditModal])
+  }, [showEditModal, post])
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmedComment = commentText.trim()
+    
+    if (!trimmedComment && !selectedFile) return
+
+    const formData = new FormData()
+    formData.append('post_id', post.id.toString())
+    formData.append('content', trimmedComment)
+    if (selectedFile) {
+      formData.append('attachment', selectedFile)
+    }
+
+    sendComment(formData, {
+      onSuccess: () => {
+        setCommentText('')
+        setSelectedFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
+    })
+  }
+
+  const removeFile = () => {
+    setSelectedFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   // ── derived values (same pattern as CreatePostForm) ─────────────────────────
   const selectedVisibility = VISIBILITY_OPTIONS.find(
@@ -97,11 +136,6 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
     Number.isFinite(currentUserId) && currentUserId === postAuthorId
   const isAccepted = post.status.toLowerCase() === 'accepted'
   const canManagePost = isOwner && isAccepted
-
-  function toggleLike() {
-    setLiked((prev) => !prev)
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1))
-  }
 
   function handleEditSubmit() {
     const trimmed = editContent.trim()
@@ -176,7 +210,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
                     <Globe size={11} />
                   )}
                   <span>{timeAgo(post.updated_at)}</span>
-                  {post.is_edited && <span>· edited</span>}
+                  {post.is_edited && <span>· đã chỉnh sửa</span>}
                 </div>
               </div>
             </div>
@@ -199,14 +233,14 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
                   onClick={() => setShowEditModal(true)}
                 >
                   <Pencil size={14} />
-                  Edit
+                  Chỉnh sửa
                 </Dropdown.Item>
                 <Dropdown.Item
                   className="d-flex align-items-center gap-2 text-danger"
                   onClick={() => setShowDeleteModal(true)}
                 >
                   <Trash2 size={14} />
-                  Delete
+                  Xóa bài
                 </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
@@ -233,34 +267,39 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         </Card.Text>
 
         {/* Actions */}
-        <div className="d-flex align-items-center gap-2 pt-3 border-top">
+        <div className="d-flex align-items-center gap-1 pt-2 border-top">
           <Button
             variant="link"
+            onClick={() => handleLike(post.id)}
             className={`d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 ${
-              liked ? 'text-danger bg-danger bg-opacity-10' : 'text-secondary'
+              post.liked ? 'text-danger bg-danger bg-opacity-10' : 'text-secondary hover-bg-light'
             }`}
           >
             <Heart
               size={18}
-              className={liked ? 'fill-danger text-danger' : ''}
+              className={post.liked ? 'fill-danger text-danger' : ''}
             />
-            <span className="small fw-medium">{likeCount}</span>
+            <span className="small fw-bold">{post.likes}</span>
           </Button>
 
           <Button
             variant="link"
-            className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
+            onClick={() => setShowCommentInput(!showCommentInput)}
+            className={`d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 hover-bg-light ${
+              showCommentInput ? 'text-primary bg-primary bg-opacity-10' : 'text-secondary'
+            }`}
           >
             <MessageCircle size={18} />
-            <span className="small fw-medium">{post.comments}</span>
+            <span className="small fw-bold">{post.comments}</span>
           </Button>
 
           <Button
             variant="link"
-            className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
+            onClick={() => handleShare(post.id)}
+            className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary hover-bg-light"
           >
             <Share2 size={18} />
-            <span className="small fw-medium">{post.shares}</span>
+            <span className="small fw-bold">{post.shares}</span>
           </Button>
 
           {/* Nút Báo cáo */}
@@ -288,6 +327,68 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             />
           </Button>
         </div>
+
+        {/* ── Khu vực Tương tác Bình luận & Phản hồi ────────────────────────────── */}
+        {showCommentInput && (
+          <div className="mt-3 pt-3 border-top">
+            {/* Form tạo bình luận mới */}
+            <Form onSubmit={handleCommentSubmit} className="mb-4">
+              <div className="d-flex gap-2 align-items-start">
+                <UserAvatar fullName={user?.full_name ?? ''} size={32} />
+                <div className="flex-grow-1 position-relative">
+                  <Form.Control
+                    as="textarea"
+                    rows={1}
+                    placeholder="Viết bình luận..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    className="rounded-4 border-0 bg-light pe-5"
+                    style={{ resize: 'none', minHeight: '40px' }}
+                  />
+                  <div className="position-absolute end-0 top-0 h-100 d-flex align-items-center pe-2 gap-2">
+                    <input
+                      type="file"
+                      hidden
+                      ref={fileInputRef}
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept="image/*,video/*,.pdf"
+                    />
+                    <Button 
+                      variant="link" 
+                      className="p-1 text-secondary animate-hover" 
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Paperclip size={18} />
+                    </Button>
+                    <Button 
+                      variant="link" 
+                      type="submit" 
+                      className="p-1 text-primary" 
+                      disabled={isCommenting || (!commentText.trim() && !selectedFile)}
+                    >
+                      {isCommenting ? <Spinner animation="border" size="sm" /> : <Send size={18} />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Preview File Đính Kèm */}
+              {selectedFile && (
+                <div className="ms-5 mt-2 d-inline-flex align-items-center gap-2 bg-light p-2 rounded-3 border">
+                  <span className="small text-truncate" style={{ maxWidth: '200px' }}>
+                    {selectedFile.name}
+                  </span>
+                  <X size={14} className="text-danger cursor-pointer" onClick={removeFile} />
+                </div>
+              )}
+            </Form>
+
+            {/* Danh sách bình luận & phản hồi từ ComponentSection */}
+            <div className="post-comments-list">
+              <CommentSection postId={post.id} />
+            </div>
+          </div>
+        )}
       </Card.Body>
 
       {/* ── Edit modal ────────────────────────────────────────────────────────── */}
