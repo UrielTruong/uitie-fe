@@ -1,4 +1,5 @@
 import type { Post } from '#/types/post'
+import ReportModal from '@/components/ReportModal'
 import {
   Bookmark,
   BookOpen,
@@ -6,6 +7,7 @@ import {
   ClipboardList,
   Coffee,
   EllipsisVertical,
+  Flag,
   Globe,
   Heart,
   Lock,
@@ -55,6 +57,9 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
   const [bookmarked, setBookmarked] = useState(false)
+  
+  // Thêm State để ẩn/hiện modal báo cáo
+  const [isReportOpen, setIsReportOpen] = useState(false)
 
   const user = useStore(authStore, (s) => s.user)
   const { mutate: mutateUpdatePost, isPending: isUpdating } = useUpdatePost()
@@ -258,6 +263,16 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             <span className="small fw-medium">{post.shares}</span>
           </Button>
 
+          {/* Nút Báo cáo */}
+          <Button
+            variant="link"
+            onClick={() => setIsReportOpen(true)}
+            className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary hover-text-danger"
+            title="Báo cáo bài viết vi phạm"
+          >
+            <Flag size={18} />
+          </Button>
+
           <Button
             variant="link"
             onClick={() => setBookmarked((p) => !p)}
@@ -415,6 +430,14 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* ── Report modal ──────────────────────────────────────────────────────── */}
+      {isReportOpen && (
+        <ReportModal
+          postId={post.id}
+          onClose={() => setIsReportOpen(false)}
+        />
+      )}
     </Card>
   )
 }
