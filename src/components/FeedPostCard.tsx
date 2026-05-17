@@ -12,6 +12,7 @@ import {
   Heart,
   Lock,
   MessageCircle,
+  Paperclip,
   Pencil,
   Share2,
   Tag,
@@ -57,7 +58,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
   const [bookmarked, setBookmarked] = useState(false)
-  
+
   // Thêm State để ẩn/hiện modal báo cáo
   const [isReportOpen, setIsReportOpen] = useState(false)
 
@@ -232,6 +233,58 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           {post.content}
         </Card.Text>
 
+        {/* Attachment */}
+        {post.attachments && post.attachments.length > 0 && (
+          <div className="mb-3 d-flex flex-wrap gap-2">
+            {post.attachments.map((att) => {
+              if (att.file_type === 'Image') {
+                return (
+                  <img
+                    key={att.id}
+                    src={att.view_url}
+                    alt={att.file_name ?? 'image'}
+                    className="rounded-3"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: 300,
+                      objectFit: 'cover',
+                    }}
+                  />
+                )
+              }
+
+              if (att.file_type === 'Video') {
+                return (
+                  <video
+                    key={att.id}
+                    src={att.view_url}
+                    controls
+                    className="rounded-3 w-100"
+                    style={{ maxHeight: 300 }}
+                  />
+                )
+              }
+
+              // Document
+              return (
+                <div key={att.id} className="d-flex justify-content-end">
+                  <a
+                    href={att.view_url}
+                    download={att.file_name ?? true}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="d-flex align-items-center gap-2 text-decoration-none border rounded-3 px-3 py-2 text-secondary"
+                  >
+                    <Paperclip size={16} />
+                    <span className="small">
+                      {att.file_name ?? 'Download file'}
+                    </span>
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        )}
         {/* Actions */}
         <div className="d-flex align-items-center gap-2 pt-3 border-top">
           <Button
@@ -433,10 +486,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
 
       {/* ── Report modal ──────────────────────────────────────────────────────── */}
       {isReportOpen && (
-        <ReportModal
-          postId={post.id}
-          onClose={() => setIsReportOpen(false)}
-        />
+        <ReportModal postId={post.id} onClose={() => setIsReportOpen(false)} />
       )}
     </Card>
   )

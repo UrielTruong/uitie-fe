@@ -130,5 +130,9 @@
   "admin_posts_reject_modal_confirm": "Reject",
   "admin_posts_accept_success": "Post accepted",
   "admin_posts_reject_success": "Post rejected",
-  "admin_users_col_id": "ID"
+  "admin_users_col_id": "ID",
+  "error_missing_category": "Please select post category",
+  "toast_upload_post_success": "Upload post successfully, wait for approve!",
+  "error_upload_post_failed": "Upload post failed, try again",
+  "post_placeholder_text":"What are you thinking about"
 }

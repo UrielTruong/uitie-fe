@@ -133,6 +133,10 @@
   "admin_posts_reject_modal_confirm": "Từ chối",
   "admin_posts_accept_success": "Bài đăng đã được chấp nhận",
   "admin_posts_reject_success": "Bài đăng đã được từ chối",
-  "admin_users_col_id": "ID"
-
+  "admin_users_col_id": "ID",
+  "error_missing_category": "Vui lòng chọn danh mục bài viết!",
+  "toast_upload_post_success": "Đăng bài thành công vui lòng chờ admin duyệt.",
+  "error_upload_post_failed": "Đăng bài thất bại vui lòng thử lại sau.",
+  "post_placeholder_text": "Bạn đang nghĩ gì...",
+  "post_upload_file": "File đính kèm"
 }
