@@ -1,4 +1,4 @@
-import type { Post } from '#/types/post'
+import type { Attachment, AttachmentPayload, Post } from '#/types/post'
 import ReportModal from '@/components/ReportModal'
 import {
   Bookmark,
@@ -7,9 +7,13 @@ import {
   ClipboardList,
   Coffee,
   EllipsisVertical,
+  File,
+  FileText,
+  Film,
   Flag,
   Globe,
   Heart,
+  Image,
   Lock,
   MessageCircle,
   Paperclip,
@@ -17,8 +21,11 @@ import {
   Share2,
   Tag,
   Trash2,
+  Upload,
+  X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { presignAttachments, uploadToMinIO } from '#/api/attachmentApi'
 import { Button, Card, Dropdown, Form, Modal } from 'react-bootstrap'
 import UserAvatar from './UserAvatar'
 import { authStore } from '#/lib/auth'
@@ -27,7 +34,26 @@ import { useStore } from '@tanstack/react-store'
 import toast from 'react-hot-toast'
 import { CATEGORIES } from '#/types/category'
 
-// ── constants (mirror CreatePostForm) ────────────────────────────────────────
+const MAX_FILES = 5
+const ACCEPTED_EXTENSIONS = [
+  '.docx',
+  '.doc',
+  '.xlsx',
+  '.png',
+  '.jpeg',
+  '.jpg',
+  '.pdf',
+]
+const ACCEPTED_MIME_TYPES = [
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/png',
+  'image/jpeg',
+  'application/pdf',
+]
+const ACCEPTED_ATTR = ACCEPTED_EXTENSIONS.join(',')
+
 const VISIBILITY_OPTIONS = [
   { value: 'Public' as const, label: 'Công khai', Icon: Globe },
   { value: 'Private' as const, label: 'Chỉ mình tôi', Icon: Lock },
@@ -38,6 +64,28 @@ const CATEGORY_ICONS: Record<number, React.ElementType> = {
   2: ClipboardList,
   3: Briefcase,
   4: Coffee,
+}
+
+function getFileIcon(file: File): React.ElementType {
+  if (file.type.startsWith('image/')) return Image
+  if (file.type.startsWith('video/')) return Film
+  if (file.type === 'application/pdf' || file.type.includes('text'))
+    return FileText
+  return File
+}
+
+function getAttachmentIcon(
+  fileType: 'Image' | 'Video' | 'Document',
+): React.ElementType {
+  if (fileType === 'Image') return Image
+  if (fileType === 'Video') return Film
+  return FileText
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function timeAgo(dateStr: string): string {
@@ -58,8 +106,6 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
   const [bookmarked, setBookmarked] = useState(false)
-
-  // Thêm State để ẩn/hiện modal báo cáo
   const [isReportOpen, setIsReportOpen] = useState(false)
 
   const user = useStore(authStore, (s) => s.user)
@@ -69,21 +115,27 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  // ── edit form state ─────────────────────────────────────────────────────────
+  // edit form state
   const [editContent, setEditContent] = useState('')
   const [visibility, setVisibility] = useState<'Public' | 'Private'>('Public')
   const [categoryId, setCategoryId] = useState<number | ''>('')
+  const [existingAttachments, setExistingAttachments] = useState<Attachment[]>(
+    [],
+  )
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
-  // Seed from post when modal opens — this is the critical fix
   useEffect(() => {
     if (showEditModal) {
       setEditContent(post.content ?? '')
       setVisibility((post.visibility as 'Public' | 'Private') ?? 'Public')
       setCategoryId(post.category?.id ?? '')
+      setExistingAttachments(post.attachments ?? [])
+      setNewFiles([])
     }
   }, [showEditModal])
 
-  // ── derived values (same pattern as CreatePostForm) ─────────────────────────
   const selectedVisibility = VISIBILITY_OPTIONS.find(
     (o) => o.value === visibility,
   )!
@@ -91,7 +143,6 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const CategoryIcon =
     categoryId !== '' ? CATEGORY_ICONS[categoryId as number] : Tag
 
-  // ── guards ───────────────────────────────────────────────────────────────────
   const currentUserId = Number(user?.id)
   const postAuthorId = Number(post.author.id)
   const isOwner =
@@ -99,15 +150,41 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const isAccepted = post.status.toLowerCase() === 'accepted'
   const canManagePost = isOwner && isAccepted
 
-  function toggleLike() {
-    setLiked((prev) => !prev)
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1))
+  function handleEditFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const incoming = Array.from(e.target.files ?? [])
+    if (!incoming.length) return
+    const valid = incoming.filter((f) => ACCEPTED_MIME_TYPES.includes(f.type))
+    const rejected = incoming.length - valid.length
+    if (rejected > 0) {
+      toast.error(
+        `${rejected} file không được hỗ trợ. Chỉ chấp nhận: ${ACCEPTED_EXTENSIONS.join(', ')}`,
+      )
+    }
+    if (!valid.length) {
+      if (editFileInputRef.current) editFileInputRef.current.value = ''
+      return
+    }
+    const totalCurrent = existingAttachments.length + newFiles.length
+    if (totalCurrent + valid.length > MAX_FILES) {
+      toast.error(`Tối đa ${MAX_FILES} file`)
+      const allowed = valid.slice(0, MAX_FILES - totalCurrent)
+      if (allowed.length > 0) setNewFiles((prev) => [...prev, ...allowed])
+    } else {
+      setNewFiles((prev) => [...prev, ...valid])
+    }
+    if (editFileInputRef.current) editFileInputRef.current.value = ''
   }
 
-  function handleEditSubmit() {
-    const trimmed = editContent.trim()
+  function removeExistingAttachment(id: number) {
+    setExistingAttachments((prev) => prev.filter((a) => a.id !== id))
+  }
 
-    // ── validation (mirrors CreatePostForm) ──────────────────────────────────
+  function removeNewFile(index: number) {
+    setNewFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  async function handleEditSubmit() {
+    const trimmed = editContent.trim()
     if (!trimmed) {
       toast.error('Nội dung bài viết không được để trống.')
       return
@@ -117,6 +194,41 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
       return
     }
 
+    let newAttachmentPayloads: AttachmentPayload[] = []
+    if (newFiles.length > 0) {
+      setIsUploadingFiles(true)
+      try {
+        const presignResults = await presignAttachments(newFiles)
+        await Promise.all(
+          presignResults.map((r, i) =>
+            uploadToMinIO(r.presigned_url, newFiles[i]),
+          ),
+        )
+        newAttachmentPayloads = presignResults.map(
+          ({ file_url, file_type, file_name }) => ({
+            file_url,
+            file_type,
+            file_name,
+          }),
+        )
+      } catch {
+        toast.error('Upload file thất bại, vui lòng thử lại.')
+        setIsUploadingFiles(false)
+        return
+      }
+      setIsUploadingFiles(false)
+    }
+
+    const existingPayloads: AttachmentPayload[] = existingAttachments.map(
+      (att) => ({
+        file_url: att.file_url,
+        file_type: att.file_type,
+        file_name: att.file_name ?? '',
+      }),
+    )
+
+    const allAttachments = [...existingPayloads, ...newAttachmentPayloads]
+
     mutateUpdatePost(
       {
         id: post.id,
@@ -124,6 +236,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           content: trimmed,
           visibility,
           category_id: categoryId as number,
+          attachments: allAttachments.length > 0 ? allAttachments : [],
         },
       },
       {
@@ -168,17 +281,15 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           <div className="d-flex align-items-center gap-3">
             <UserAvatar fullName={post.author.full_name} />
             <div>
-              <div>
-                <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
-                <div className="d-flex align-items-center gap-1 text-muted small">
-                  {post.visibility === 'Private' ? (
-                    <Lock size={11} />
-                  ) : (
-                    <Globe size={11} />
-                  )}
-                  <span>{timeAgo(post.updated_at)}</span>
-                  {post.is_edited && <span>· edited</span>}
-                </div>
+              <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
+              <div className="d-flex align-items-center gap-1 text-muted small">
+                {post.visibility === 'Private' ? (
+                  <Lock size={11} />
+                ) : (
+                  <Globe size={11} />
+                )}
+                <span>{timeAgo(post.updated_at)}</span>
+                {post.is_edited && <span>· edited</span>}
               </div>
             </div>
           </div>
@@ -228,12 +339,13 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             })()}
           </div>
         )}
+
         {/* Content */}
         <Card.Text className="mb-4" style={{ whiteSpace: 'pre-line' }}>
           {post.content}
         </Card.Text>
 
-        {/* Attachment */}
+        {/* Attachments */}
         {post.attachments && post.attachments.length > 0 && (
           <div className="mb-3 d-flex flex-wrap gap-2">
             {post.attachments.map((att) => {
@@ -252,7 +364,6 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
                   />
                 )
               }
-
               if (att.file_type === 'Video') {
                 return (
                   <video
@@ -264,10 +375,8 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
                   />
                 )
               }
-
-              // Document
               return (
-                <div key={att.id} className="d-flex justify-content-end">
+                <div key={att.id} className="d-flex align-items-end">
                   <a
                     href={att.view_url}
                     download={att.file_name ?? true}
@@ -285,6 +394,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             })}
           </div>
         )}
+
         {/* Actions */}
         <div className="d-flex align-items-center gap-2 pt-3 border-top">
           <Button
@@ -316,7 +426,6 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             <span className="small fw-medium">{post.shares}</span>
           </Button>
 
-          {/* Nút Báo cáo */}
           <Button
             variant="link"
             onClick={() => setIsReportOpen(true)}
@@ -343,7 +452,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         </div>
       </Card.Body>
 
-      {/* ── Edit modal ────────────────────────────────────────────────────────── */}
+      {/* ── Edit modal ─────────────────────────────────────────────────────────── */}
       <Modal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
@@ -363,7 +472,128 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             style={{ resize: 'none' }}
           />
 
+          {/* Existing attachments */}
+          {existingAttachments.length > 0 && (
+            <div className="d-flex flex-column gap-2 mt-3">
+              {existingAttachments.map((att) => {
+                const AttIcon = getAttachmentIcon(att.file_type)
+                return (
+                  <div
+                    key={att.id}
+                    className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-light border"
+                    style={{ fontSize: '0.82rem' }}
+                  >
+                    <AttIcon size={15} className="text-primary flex-shrink-0" />
+                    <span
+                      className="text-truncate flex-grow-1 text-secondary fw-medium"
+                      title={att.file_name ?? undefined}
+                    >
+                      {att.file_name ?? 'file'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeExistingAttachment(att.id)}
+                      className="btn btn-sm p-0 ms-1 d-flex align-items-center justify-content-center text-muted"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        flexShrink: 0,
+                      }}
+                      aria-label={`Remove ${att.file_name}`}
+                      title="Xóa file"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* New files preview */}
+          {newFiles.length > 0 && (
+            <div className="d-flex flex-column gap-2 mt-2">
+              {newFiles.map((file, index) => {
+                const FileIcon = getFileIcon(file)
+                return (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-light border"
+                    style={{ fontSize: '0.82rem' }}
+                  >
+                    <FileIcon
+                      size={15}
+                      className="text-primary flex-shrink-0"
+                    />
+                    <span
+                      className="text-truncate flex-grow-1 text-secondary fw-medium"
+                      title={file.name}
+                    >
+                      {file.name}
+                    </span>
+                    <span
+                      className="text-muted flex-shrink-0"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      {formatBytes(file.size)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeNewFile(index)}
+                      className="btn btn-sm p-0 ms-1 d-flex align-items-center justify-content-center text-muted"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        flexShrink: 0,
+                      }}
+                      aria-label={`Remove ${file.name}`}
+                      title="Xóa file"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {existingAttachments.length + newFiles.length > 0 && (
+            <p className="mb-0 mt-1 text-muted" style={{ fontSize: '0.75rem' }}>
+              {existingAttachments.length + newFiles.length}/{MAX_FILES} file đã
+              chọn
+            </p>
+          )}
+
           <div className="d-flex align-items-center gap-2 pt-2 border-top mt-3">
+            <input
+              ref={editFileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPTED_ATTR}
+              style={{ display: 'none' }}
+              onChange={handleEditFileChange}
+              aria-label="Upload file đính kèm"
+            />
+
+            <button
+              type="button"
+              onClick={() => editFileInputRef.current?.click()}
+              disabled={
+                existingAttachments.length + newFiles.length >= MAX_FILES
+              }
+              className="btn btn-light btn-sm d-flex align-items-center gap-1 rounded-3 border text-secondary px-2 py-1"
+              title={
+                existingAttachments.length + newFiles.length >= MAX_FILES
+                  ? `Tối đa ${MAX_FILES} file`
+                  : `Chấp nhận: ${ACCEPTED_EXTENSIONS.join(', ')}`
+              }
+            >
+              <Upload size={14} />
+              <span className="small">Upload file</span>
+            </button>
+
             {/* Visibility */}
             <Dropdown>
               <Dropdown.Toggle
@@ -431,16 +661,16 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           <Button
             variant="secondary"
             onClick={() => setShowEditModal(false)}
-            disabled={isUpdating}
+            disabled={isUpdating || isUploadingFiles}
           >
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleEditSubmit}
-            disabled={isUpdating}
+            disabled={isUpdating || isUploadingFiles}
           >
-            {isUpdating ? (
+            {isUpdating || isUploadingFiles ? (
               <>
                 <span
                   className="spinner-border spinner-border-sm me-1"
@@ -456,7 +686,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         </Modal.Footer>
       </Modal>
 
-      {/* ── Delete modal ──────────────────────────────────────────────────────── */}
+      {/* ── Delete modal ───────────────────────────────────────────────────────── */}
       <Modal
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
@@ -484,7 +714,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         </Modal.Footer>
       </Modal>
 
-      {/* ── Report modal ──────────────────────────────────────────────────────── */}
+      {/* ── Report modal ───────────────────────────────────────────────────────── */}
       {isReportOpen && (
         <ReportModal postId={post.id} onClose={() => setIsReportOpen(false)} />
       )}

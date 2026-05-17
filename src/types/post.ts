@@ -15,6 +15,7 @@ export interface CreatePostPayload {
     content?: string
     visibility?: 'Public' | 'Private'
     category_id?: number
+    attachments?: AttachmentPayload[]
   }
 
   export interface Attachment {
@@ -22,6 +23,7 @@ export interface CreatePostPayload {
     file_type: 'Image' | 'Video' | 'Document'
     file_name: string | null
     view_url: string
+    file_url: string
   }
   
   export interface Post {
