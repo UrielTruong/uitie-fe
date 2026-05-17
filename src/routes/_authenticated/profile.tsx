@@ -178,11 +178,11 @@ function ProfilePage() {
                   <span className="text-secondary">bài viết</span>
                 </span>
                 <span>
-                  <strong>1.2K</strong>{' '}
+                  <strong>{profileData.followers_count ?? 0}</strong>{' '}
                   <span className="text-secondary">người theo dõi</span>
                 </span>
                 <span>
-                  <strong>384</strong>{' '}
+                  <strong>{profileData.following_count ?? 0}</strong>{' '}
                   <span className="text-secondary">đang theo dõi</span>
                 </span>
               </div>
