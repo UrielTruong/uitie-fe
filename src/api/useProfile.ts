@@ -1,0 +1,30 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import axiosClient from '#/api/axiosClient' 
+
+// Hook lấy thông tin Profile
+export function useProfile(userId?: string) {
+  return useQuery({
+    queryKey: ['profile', userId || 'me'],
+    queryFn: async () => {
+      const url = userId ? `/user/profile?user_id=${userId}` : '/user/profile'
+      // axiosClient đã tự đính kèm baseURL và Bearer Token
+      const response = await axiosClient.get(url)
+      return response.data.data
+    },
+  })
+}
+
+// Hook cập nhật thông tin Profile
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await axiosClient.put('/user/profile', payload)
+      return response.data
+    },
+    onSuccess: () => {
+      // Khi cập nhật thành công, xóa cache để useQuery tự động fetch lại data mới
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+    },
+  })
+}

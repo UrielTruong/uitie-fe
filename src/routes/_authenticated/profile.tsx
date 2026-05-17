@@ -1,6 +1,6 @@
 import { Card, Button, Badge, Image, Nav, Row, Col, Modal, Form, Spinner } from 'react-bootstrap'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Camera,
   Check,
@@ -9,9 +9,9 @@ import {
   UserPlus,
   BookOpen,
 } from 'lucide-react'
-import { PROFILES } from '#/lib/fake-api'
-import type { Profile, UserRole } from '#/lib/fake-api'
-import axios from 'axios'
+import type { UserRole } from '#/lib/fake-api'
+import { useProfile, useUpdateProfile } from '#/api/useProfile'
+import toast from 'react-hot-toast'
 
 export const Route = createFileRoute('/_authenticated/profile')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -38,8 +38,10 @@ const ROLE_BADGE: Record<
   admin: { label: 'Admin', bg: 'danger-subtle', text: 'danger-emphasis' },
 }
 
-function RoleBadge({ role }: { role: UserRole }) {
-  const r = ROLE_BADGE[role]
+function RoleBadge({ role }: { role: string }) {
+  // Chuẩn hóa role lấy từ database sang UserRole key
+  const normalizedRole = role ? (role.toLowerCase().includes('admin') ? 'admin' : role.toLowerCase()) : 'student'
+  const r = ROLE_BADGE[normalizedRole as UserRole] || ROLE_BADGE.student
   return (
     <Badge bg={r.bg} text={r.text} className="border fw-semibold">
       {r.label}
@@ -51,61 +53,12 @@ function ProfilePage() {
   const { user: userId } = Route.useSearch()
   const isMe = !userId
 
-  // Khởi tạo trạng thái rỗng/loading thay vì dùng dữ liệu giả PROFILES.me
-  const initialProfile = (userId && (PROFILES as any)[userId]) || {
-    id: '',
-    name: 'Đang tải...',
-    email: '',
-    phone_number: '',
-    faculty: '',
-    class_name: '',
-    year: '',
-    role: 'student',
-    avatar: 'https://github.com/shadcn.png'
-  }
-
-  const [profile, setProfile] = useState<any>(initialProfile)
   const [tab, setTab] = useState<string>('posts')
   const [following, setFollowing] = useState(!isMe)
-  const [isFetching, setIsFetching] = useState(false)
 
-  // Hàm Helper lấy token an toàn từ cả localStorage và sessionStorage
-  const getToken = () => localStorage.getItem('access_token') || localStorage.getItem('token') || sessionStorage.getItem('access_token') || sessionStorage.getItem('token')
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = getToken()
-        if (!token) return
-
-        const response = await axios.get('http://127.0.0.1:8000/api/user/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        
-        if (response.data.status) {
-          const realData = response.data.data
-          setProfile((prev: any) => ({
-            ...prev,
-            id: realData.id,
-            name: realData.full_name || prev.name,
-            email: realData.email || prev.email,
-            phone_number: realData.phone_number || '',
-            faculty: realData.faculty || '',
-            class_name: realData.class_name || '',
-            year: realData.academic_year || '',
-            role: realData.role ? (realData.role.toLowerCase().includes('admin') ? 'admin' : realData.role.toLowerCase()) : prev.role,
-            avatar: realData.avatar || prev.avatar,
-          }))
-        }
-      } catch (error) {
-        console.error('Lỗi khi tải thông tin profile:', error)
-      }
-    }
-
-    if (isMe) {
-      fetchProfile()
-    }
-  }, [isMe])
+  // Hook TanStack Query tự động quản lý fetching
+  const { data: profileData, isLoading, isError } = useProfile(userId)
+  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [editData, setEditData] = useState({
@@ -116,76 +69,48 @@ function ProfilePage() {
     academic_year: '',
   })
 
-  const handleOpenEdit = async () => {
-    setIsFetching(true)
-    try {
-      const token = getToken()
-      if (token) {
-        const response = await axios.get('http://127.0.0.1:8000/api/user/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        
-        if (response.data.status) {
-          const realData = response.data.data
-          setEditData({
-            full_name: realData.full_name || '',
-            phone_number: realData.phone_number || '',
-            faculty: realData.faculty || '',
-            class_name: realData.class_name || '',
-            academic_year: realData.academic_year || '',
-          })
-          setShowEditModal(true)
-          setIsFetching(false)
-          return
-        }
-      } else {
-        console.warn('Không tìm thấy token trong storage. Sử dụng dữ liệu mẫu.')
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy thông tin thật từ server:', error)
+  // Đưa dữ liệu hiện tại vào form khi mở modal
+  const handleOpenEdit = () => {
+    if (profileData) {
+      setEditData({
+        full_name: profileData.full_name || '',
+        phone_number: profileData.phone_number || '',
+        faculty: profileData.faculty || '',
+        class_name: profileData.class_name || '',
+        academic_year: profileData.academic_year || '',
+      })
     }
-
-    // Fallback: Dùng dữ liệu hiện tại trên state nếu API gặp lỗi
-    setEditData({
-      full_name: profile.name || '',
-      phone_number: profile.phone_number || '',
-      faculty: profile.faculty || '',
-      class_name: profile.class_name || '',
-      academic_year: profile.year || '',
-    })
     setShowEditModal(true)
-    setIsFetching(false)
   }
 
   const handleSaveEdit = async () => {
     try {
-      const token = getToken()
-      
-      const response = await axios.put('http://127.0.0.1:8000/api/user/profile', editData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      
-      console.log('Cập nhật thành công:', response.data)
-      
-      // Cập nhật lại UI sau khi lưu thành công
-      setProfile((prev: any) => ({
-        ...prev,
-        name: editData.full_name,
-        phone_number: editData.phone_number,
-        faculty: editData.faculty,
-        class_name: editData.class_name,
-        year: editData.academic_year,
-      }))
-
-      alert('Cập nhật hồ sơ thành công!')
+      await updateProfile(editData)
+      toast.success('Cập nhật hồ sơ thành công!')
       setShowEditModal(false)
     } catch (error) {
       console.error('Lỗi khi cập nhật hồ sơ:', error)
-      alert('Đã xảy ra lỗi khi cập nhật hồ sơ. Vui lòng kiểm tra lại!')
+      toast.error('Đã xảy ra lỗi khi cập nhật hồ sơ. Vui lòng kiểm tra lại!')
     }
   }
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <Spinner animation="border" variant="primary" />
+      </div>
+    )
+  }
+
+  if (isError || !profileData) {
+    return (
+      <div className="text-center py-5 text-secondary">
+        <p>Không thể tải thông tin hồ sơ.</p>
+      </div>
+    )
+  }
+
+  const avatarUrl = profileData.avatar || 'https://github.com/shadcn.png'
 
   return (
     <div>
@@ -220,11 +145,11 @@ function ProfilePage() {
               style={{ width: 140, height: 140 }}
             >
               <Image
-                src={profile.avatar}
+                src={avatarUrl}
                 roundedCircle
                 width={140}
                 height={140}
-                className="border border-4 border-body shadow-sm bg-body"
+                className="border border-4 border-body shadow-sm bg-body object-fit-cover"
               />
               {isMe && (
                 <Button
@@ -239,8 +164,8 @@ function ProfilePage() {
 
             <div className="flex-grow-1 pt-2">
               <div className="d-flex align-items-center gap-2 flex-wrap">
-                <h3 className="mb-0 fw-bold">{profile.name}</h3>
-                <RoleBadge role={profile.role} />
+                <h3 className="mb-0 fw-bold">{profileData.full_name}</h3>
+                <RoleBadge role={profileData.role} />
               </div>
               <div className="d-flex gap-3 small mt-2">
                 <span>
@@ -264,9 +189,8 @@ function ProfilePage() {
                   variant="outline-primary"
                   className="d-flex align-items-center gap-2"
                   onClick={handleOpenEdit}
-                  disabled={isFetching}
                 >
-                  {isFetching ? <Spinner size="sm" /> : <SettingsIcon size={16} />} Chỉnh sửa hồ sơ
+                  <SettingsIcon size={16} /> Chỉnh sửa hồ sơ
                 </Button>
               ) : (
                 <>
@@ -322,11 +246,11 @@ function ProfilePage() {
                   Thông tin học thuật
                 </Card.Title>
                 {[
-                  ['Khoa', profile.faculty || '—'],
-                  ['Lớp', profile.class_name || '—'],
-                  ['Khoá', profile.year || '—'],
-                  ['Email', profile.email || '—'],
-                  profile.phone_number ? ['Số điện thoại', profile.phone_number] : null,
+                  ['Khoa', profileData.faculty || '—'],
+                  ['Lớp', profileData.class_name || '—'],
+                  ['Khoá', profileData.academic_year || '—'],
+                  ['Email', profileData.email || '—'],
+                  profileData.phone_number ? ['Số điện thoại', profileData.phone_number] : null,
                 ]
                   .filter((r): r is [string, string] => Array.isArray(r))
                   .map(([k, v]) => (
@@ -409,8 +333,10 @@ function ProfilePage() {
             </Form>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Hủy</Button>
-            <Button variant="primary" onClick={handleSaveEdit}>Lưu thay đổi</Button>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)} disabled={isUpdating}>Hủy</Button>
+            <Button variant="primary" onClick={handleSaveEdit} disabled={isUpdating}>
+              {isUpdating ? <Spinner size="sm" /> : 'Lưu thay đổi'}
+            </Button>
           </Modal.Footer>
         </Modal>
       </div>
