@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createPost, deletePost, fetchFeed, searchPost, updatePost } from './postApi'
-import type { CreatePostPayload, UpdatePostPayload } from '#/types/post'
+import type { CreatePostPayload, Post, UpdatePostPayload } from '#/types/post'
 
 export const useFeedPosts = () => {
   return useQuery({
@@ -31,7 +31,14 @@ export const useUpdatePost = () => {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: UpdatePostPayload }) =>
       updatePost(id, payload),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<Post[]>(['post', 'feed'], (old) =>
+        old
+          ? old.map((p) =>
+              p.id === variables.id ? { ...p, ...data.data } : p,
+            )
+          : old,
+      )
       queryClient.invalidateQueries({ queryKey: ['post', 'feed'] })
       queryClient.invalidateQueries({ queryKey: ['post', 'search'] })
     },

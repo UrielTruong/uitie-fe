@@ -1,14 +1,29 @@
+export interface AttachmentPayload {
+  file_url: string
+  file_type: 'Image' | 'Video' | 'Document'
+  file_name: string
+}
+
 export interface CreatePostPayload {
-    content?: string
-    visibility?: 'Public' | 'Private'
-    category_id?: number
-    user_id: string
-  }
+  content?: string
+  visibility?: 'Public' | 'Private'
+  category_id?: number
+  attachments?: AttachmentPayload[]
+}
 
   export interface UpdatePostPayload {
     content?: string
     visibility?: 'Public' | 'Private'
     category_id?: number
+    attachments?: AttachmentPayload[]
+  }
+
+  export interface Attachment {
+    id: number
+    file_type: 'Image' | 'Video' | 'Document'
+    file_name: string | null
+    view_url: string
+    file_url: string
   }
   
   export interface Post {
@@ -32,6 +47,7 @@ export interface CreatePostPayload {
     comments: number
     shares: number
     liked: boolean
+    attachments?: Attachment[]
   }
 
 export interface ValidatePostRequest {
