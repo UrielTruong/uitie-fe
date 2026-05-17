@@ -1,21 +1,28 @@
-import { Card, Button, Badge, Image, Nav, Row, Col } from 'react-bootstrap'
+import { Card, Button, Badge, Image, Nav, Row, Col, Modal, Form, Spinner } from 'react-bootstrap'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   Camera,
   Check,
+  Heart,
   MessageSquare,
   Settings as SettingsIcon,
+  Share2,
   UserPlus,
   BookOpen,
 } from 'lucide-react'
-import { PROFILES } from '#/lib/fake-api'
-import type { Profile, UserRole } from '#/lib/fake-api'
+import type { UserRole } from '#/lib/fake-api'
+import { useProfile, useUpdateProfile, useUserPosts } from '#/api/useProfile'
+import toast from 'react-hot-toast'
 
 export const Route = createFileRoute('/_authenticated/profile')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    user: typeof search.user === 'string' ? search.user : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const validSearch: { user?: string } = {}
+    if (typeof search.user === 'string') {
+      validSearch.user = search.user
+    }
+    return validSearch
+  },
   component: ProfilePage,
 })
 
@@ -33,8 +40,10 @@ const ROLE_BADGE: Record<
   admin: { label: 'Admin', bg: 'danger-subtle', text: 'danger-emphasis' },
 }
 
-function RoleBadge({ role }: { role: UserRole }) {
-  const r = ROLE_BADGE[role]
+function RoleBadge({ role }: { role: string }) {
+  // Chuẩn hóa role lấy từ database sang UserRole key
+  const normalizedRole = role ? (role.toLowerCase().includes('admin') ? 'admin' : role.toLowerCase()) : 'student'
+  const r = ROLE_BADGE[normalizedRole as UserRole] || ROLE_BADGE.student
   return (
     <Badge bg={r.bg} text={r.text} className="border fw-semibold">
       {r.label}
@@ -44,14 +53,69 @@ function RoleBadge({ role }: { role: UserRole }) {
 
 function ProfilePage() {
   const { user: userId } = Route.useSearch()
-  const profile: Profile = (userId && PROFILES[userId]) || PROFILES.me
-  const isMe = profile.id === 'me'
+  const isMe = !userId
+
   const [tab, setTab] = useState<string>('posts')
   const [following, setFollowing] = useState(!isMe)
 
-  const friends = ['u1', 'u2', 'u3', 'u4', 'u5', 'u6']
-    .map((id) => PROFILES[id])
-    .filter(Boolean)
+  // Hook TanStack Query tự động quản lý fetching
+  const { data: profileData, isLoading, isError } = useProfile(userId)
+  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
+  const { data: posts, isLoading: isLoadingPosts } = useUserPosts(profileData?.id)
+
+  const displayedPosts = posts?.filter((post: any) => post.status !== 'Rejected') || []
+
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editData, setEditData] = useState({
+    full_name: '',
+    phone_number: '',
+    faculty: '',
+    class_name: '',
+    academic_year: '',
+  })
+
+  // Đưa dữ liệu hiện tại vào form khi mở modal
+  const handleOpenEdit = () => {
+    if (profileData) {
+      setEditData({
+        full_name: profileData.full_name || '',
+        phone_number: profileData.phone_number || '',
+        faculty: profileData.faculty || '',
+        class_name: profileData.class_name || '',
+        academic_year: profileData.academic_year || '',
+      })
+    }
+    setShowEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateProfile(editData)
+      toast.success('Cập nhật hồ sơ thành công!')
+      setShowEditModal(false)
+    } catch (error) {
+      console.error('Lỗi khi cập nhật hồ sơ:', error)
+      toast.error('Đã xảy ra lỗi khi cập nhật hồ sơ. Vui lòng kiểm tra lại!')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+        <Spinner animation="border" variant="primary" />
+      </div>
+    )
+  }
+
+  if (isError || !profileData) {
+    return (
+      <div className="text-center py-5 text-secondary">
+        <p>Không thể tải thông tin hồ sơ.</p>
+      </div>
+    )
+  }
+
+  const avatarUrl = profileData.avatar || 'https://github.com/shadcn.png'
 
   return (
     <div>
@@ -86,11 +150,11 @@ function ProfilePage() {
               style={{ width: 140, height: 140 }}
             >
               <Image
-                src={profile.avatar}
+                src={avatarUrl}
                 roundedCircle
                 width={140}
                 height={140}
-                className="border border-4 border-body shadow-sm bg-body"
+                className="border border-4 border-body shadow-sm bg-body object-fit-cover"
               />
               {isMe && (
                 <Button
@@ -105,32 +169,20 @@ function ProfilePage() {
 
             <div className="flex-grow-1 pt-2">
               <div className="d-flex align-items-center gap-2 flex-wrap">
-                <h3 className="mb-0 fw-bold">{profile.name}</h3>
-                <RoleBadge role={profile.role} />
+                <h3 className="mb-0 fw-bold">{profileData.full_name}</h3>
+                <RoleBadge role={profileData.role} />
               </div>
-              <p className="mb-2 text-secondary small">
-                {profile.major} · {profile.faculty}
-                {profile.year ? ` · ${profile.year}` : ''}
-              </p>
-              {profile.bio && (
-                <p
-                  className="mb-2 text-body-secondary"
-                  style={{ maxWidth: 560 }}
-                >
-                  {profile.bio}
-                </p>
-              )}
-              <div className="d-flex gap-3 small">
+              <div className="d-flex gap-3 small mt-2">
                 <span>
-                  <strong>248</strong>{' '}
+                  <strong>{displayedPosts.length}</strong>{' '}
                   <span className="text-secondary">bài viết</span>
                 </span>
                 <span>
-                  <strong>1.2K</strong>{' '}
+                  <strong>{profileData.followers_count ?? 0}</strong>{' '}
                   <span className="text-secondary">người theo dõi</span>
                 </span>
                 <span>
-                  <strong>384</strong>{' '}
+                  <strong>{profileData.following_count ?? 0}</strong>{' '}
                   <span className="text-secondary">đang theo dõi</span>
                 </span>
               </div>
@@ -141,6 +193,7 @@ function ProfilePage() {
                 <Button
                   variant="outline-primary"
                   className="d-flex align-items-center gap-2"
+                  onClick={handleOpenEdit}
                 >
                   <SettingsIcon size={16} /> Chỉnh sửa hồ sơ
                 </Button>
@@ -173,8 +226,6 @@ function ProfilePage() {
           >
             {[
               ['posts', 'Bài viết'],
-              ['about', 'Về tôi'],
-              ['friends', 'Bạn bè'],
               ['photos', 'Ảnh'],
               ['docs', 'Tài liệu'],
             ].map(([k, l]) => (
@@ -195,14 +246,14 @@ function ProfilePage() {
             <Card className="border-0 shadow-sm rounded-4 mb-3">
               <Card.Body>
                 <Card.Title className="fs-6 fw-bold mb-3">
-                  Thông tin học thuật
+                  Thông tin
                 </Card.Title>
                 {[
-                  ['Khoa', profile.faculty],
-                  ['Ngành', profile.major],
-                  ['Khoá', profile.year ?? '—'],
-                  ['Email', `${profile.handle}@student.uit.edu.vn`],
-                  profile.job ? ['Hiện đang', profile.job] : null,
+                  ['Khoa', profileData.faculty || '—'],
+                  ['Lớp', profileData.class_name || '—'],
+                  ['Khoá', profileData.academic_year || '—'],
+                  ['Email', profileData.email || '—'],
+                  profileData.phone_number ? ['Số điện thoại', profileData.phone_number] : null,
                 ]
                   .filter((r): r is [string, string] => Array.isArray(r))
                   .map(([k, v]) => (
@@ -216,49 +267,143 @@ function ProfilePage() {
                   ))}
               </Card.Body>
             </Card>
-
-            <Card className="border-0 shadow-sm rounded-4 mb-3">
-              <Card.Body>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <Card.Title className="fs-6 fw-bold mb-0">
-                    Bạn bè{' '}
-                    <span className="text-secondary fw-normal">· 384</span>
-                  </Card.Title>
-                  <a className="small fw-semibold text-decoration-none">
-                    Xem tất cả
-                  </a>
-                </div>
-                <Row xs={3} className="g-2">
-                  {friends.map((f) => (
-                    <Col key={f.id} className="text-center">
-                      <Image
-                        src={f.avatar}
-                        rounded
-                        width="100%"
-                        className="object-fit-cover"
-                        style={{ aspectRatio: '1/1' }}
-                      />
-                      <div className="small text-truncate mt-1" title={f.name}>
-                        {f.name.split(' ').slice(-2).join(' ')}
-                      </div>
-                    </Col>
-                  ))}
-                </Row>
-              </Card.Body>
-            </Card>
           </Col>
 
           <Col lg={8}>
-            <Card className="border-0 shadow-sm rounded-4 text-center py-5">
-              <Card.Body>
-                <BookOpen size={36} className="text-secondary opacity-50" />
-                <p className="mt-3 mb-0 text-secondary">
-                  Chưa có nội dung trong tab "{tab}".
-                </p>
-              </Card.Body>
-            </Card>
+            {tab === 'posts' ? (
+              <div className="d-flex flex-column gap-3">
+                {isLoadingPosts ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                  </div>
+                ) : displayedPosts.length > 0 ? (
+                  displayedPosts.map((post: any) => (
+                    <Card key={post.id} className="border-0 shadow-sm rounded-4">
+                      <Card.Body>
+                        <div className="d-flex align-items-center gap-2 mb-3">
+                          <Image
+                            src={post.user?.avatar || profileData.avatar || 'https://github.com/shadcn.png'}
+                            roundedCircle
+                            width={40}
+                            height={40}
+                            className="object-fit-cover border"
+                          />
+                          <div>
+                            <div className="fw-bold">{post.user?.full_name || profileData.full_name || 'Người dùng ẩn danh'}</div>
+                            <div className="small text-secondary d-flex align-items-center gap-1">
+                              <span>{post.updated_at ? new Date(post.updated_at).toLocaleDateString('vi-VN') : 'Vừa xong'}</span>
+                              <span>·</span>
+                              <Badge bg="light" text="dark" className="border fw-normal">{post.category?.category_name || 'Không có danh mục'}</Badge>
+                              {post.status === 'Pending' && (
+                                <>
+                                  <span>·</span>
+                                  <Badge bg="warning" text="dark" className="fw-normal">Chờ duyệt</Badge>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="mb-0 text-break" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
+                        
+                        <div className="d-flex align-items-center gap-4 mt-3 pt-3 border-top">
+                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
+                            <Heart size={18} /> Thích
+                          </Button>
+                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
+                            <MessageSquare size={18} /> Bình luận
+                          </Button>
+                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
+                            <Share2 size={18} /> Chia sẻ
+                          </Button>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="border-0 shadow-sm rounded-4 text-center py-5">
+                    <Card.Body>
+                      <BookOpen size={36} className="text-secondary opacity-50" />
+                      <p className="mt-3 mb-0 text-secondary">
+                        Chưa có bài viết nào.
+                      </p>
+                    </Card.Body>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card className="border-0 shadow-sm rounded-4 text-center py-5">
+                <Card.Body>
+                  <BookOpen size={36} className="text-secondary opacity-50" />
+                  <p className="mt-3 mb-0 text-secondary">
+                    Chưa có nội dung trong tab "{tab}".
+                  </p>
+                </Card.Body>
+              </Card>
+            )}
           </Col>
         </Row>
+
+        {/* Edit Profile Modal */}
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title className="fs-5 fw-bold">Chỉnh sửa hồ sơ</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Họ và tên</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.full_name}
+                  onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Số điện thoại</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.phone_number}
+                  onChange={(e) => setEditData({ ...editData, phone_number: e.target.value })}
+                  placeholder="09xx xxx xxx"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Khoa</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.faculty}
+                  onChange={(e) => setEditData({ ...editData, faculty: e.target.value })}
+                  placeholder="Công nghệ phần mềm..."
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Lớp</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.class_name}
+                  onChange={(e) => setEditData({ ...editData, class_name: e.target.value })}
+                  placeholder="SE114.O21..."
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Khóa</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.academic_year}
+                  onChange={(e) => setEditData({ ...editData, academic_year: e.target.value })}
+                  placeholder="2022-2026"
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)} disabled={isUpdating}>Hủy</Button>
+            <Button variant="primary" onClick={handleSaveEdit} disabled={isUpdating}>
+              {isUpdating ? <Spinner size="sm" /> : 'Lưu thay đổi'}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   )
