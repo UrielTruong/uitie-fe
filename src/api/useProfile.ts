@@ -28,3 +28,16 @@ export function useUpdateProfile() {
     },
   })
 }
+
+// Hook lấy danh sách bài viết của user
+export function useUserPosts(userId?: string | number) {
+  return useQuery({
+    queryKey: ['user-posts', userId],
+    queryFn: async () => {
+      if (!userId) return []
+      const response = await axiosClient.get(`/users/${userId}/posts`)
+      return response.data.data
+    },
+    enabled: !!userId,
+  })
+}

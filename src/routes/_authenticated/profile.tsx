@@ -4,13 +4,15 @@ import { useState } from 'react'
 import {
   Camera,
   Check,
+  Heart,
   MessageSquare,
   Settings as SettingsIcon,
+  Share2,
   UserPlus,
   BookOpen,
 } from 'lucide-react'
 import type { UserRole } from '#/lib/fake-api'
-import { useProfile, useUpdateProfile } from '#/api/useProfile'
+import { useProfile, useUpdateProfile, useUserPosts } from '#/api/useProfile'
 import toast from 'react-hot-toast'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -59,6 +61,9 @@ function ProfilePage() {
   // Hook TanStack Query tự động quản lý fetching
   const { data: profileData, isLoading, isError } = useProfile(userId)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
+  const { data: posts, isLoading: isLoadingPosts } = useUserPosts(profileData?.id)
+
+  const displayedPosts = posts?.filter((post: any) => post.status !== 'Rejected') || []
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [editData, setEditData] = useState({
@@ -169,7 +174,7 @@ function ProfilePage() {
               </div>
               <div className="d-flex gap-3 small mt-2">
                 <span>
-                  <strong>248</strong>{' '}
+                  <strong>{displayedPosts.length}</strong>{' '}
                   <span className="text-secondary">bài viết</span>
                 </span>
                 <span>
@@ -222,7 +227,6 @@ function ProfilePage() {
             {[
               ['posts', 'Bài viết'],
               ['about', 'Về tôi'],
-              ['friends', 'Bạn bè'],
               ['photos', 'Ảnh'],
               ['docs', 'Tài liệu'],
             ].map(([k, l]) => (
@@ -243,7 +247,7 @@ function ProfilePage() {
             <Card className="border-0 shadow-sm rounded-4 mb-3">
               <Card.Body>
                 <Card.Title className="fs-6 fw-bold mb-3">
-                  Thông tin học thuật
+                  Thông tin
                 </Card.Title>
                 {[
                   ['Khoa', profileData.faculty || '—'],
@@ -267,14 +271,76 @@ function ProfilePage() {
           </Col>
 
           <Col lg={8}>
-            <Card className="border-0 shadow-sm rounded-4 text-center py-5">
-              <Card.Body>
-                <BookOpen size={36} className="text-secondary opacity-50" />
-                <p className="mt-3 mb-0 text-secondary">
-                  Chưa có nội dung trong tab "{tab}".
-                </p>
-              </Card.Body>
-            </Card>
+            {tab === 'posts' ? (
+              <div className="d-flex flex-column gap-3">
+                {isLoadingPosts ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                  </div>
+                ) : displayedPosts.length > 0 ? (
+                  displayedPosts.map((post: any) => (
+                    <Card key={post.id} className="border-0 shadow-sm rounded-4">
+                      <Card.Body>
+                        <div className="d-flex align-items-center gap-2 mb-3">
+                          <Image
+                            src={post.user?.avatar || profileData.avatar || 'https://github.com/shadcn.png'}
+                            roundedCircle
+                            width={40}
+                            height={40}
+                            className="object-fit-cover border"
+                          />
+                          <div>
+                            <div className="fw-bold">{post.user?.full_name || profileData.full_name || 'Người dùng ẩn danh'}</div>
+                            <div className="small text-secondary d-flex align-items-center gap-1">
+                              <span>{post.updated_at ? new Date(post.updated_at).toLocaleDateString('vi-VN') : 'Vừa xong'}</span>
+                              <span>·</span>
+                              <Badge bg="light" text="dark" className="border fw-normal">{post.category?.category_name || 'Không có danh mục'}</Badge>
+                              {post.status === 'Pending' && (
+                                <>
+                                  <span>·</span>
+                                  <Badge bg="warning" text="dark" className="fw-normal">Chờ duyệt</Badge>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="mb-0 text-break" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
+                        
+                        <div className="d-flex align-items-center gap-4 mt-3 pt-3 border-top">
+                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
+                            <Heart size={18} /> Thích
+                          </Button>
+                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
+                            <MessageSquare size={18} /> Bình luận
+                          </Button>
+                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
+                            <Share2 size={18} /> Chia sẻ
+                          </Button>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="border-0 shadow-sm rounded-4 text-center py-5">
+                    <Card.Body>
+                      <BookOpen size={36} className="text-secondary opacity-50" />
+                      <p className="mt-3 mb-0 text-secondary">
+                        Chưa có bài viết nào.
+                      </p>
+                    </Card.Body>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card className="border-0 shadow-sm rounded-4 text-center py-5">
+                <Card.Body>
+                  <BookOpen size={36} className="text-secondary opacity-50" />
+                  <p className="mt-3 mb-0 text-secondary">
+                    Chưa có nội dung trong tab "{tab}".
+                  </p>
+                </Card.Body>
+              </Card>
+            )}
           </Col>
         </Row>
 
