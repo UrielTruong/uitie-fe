@@ -369,7 +369,7 @@ function ProfilePage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">Ngành học</Form.Label>
+                <Form.Label className="fw-medium">Khoa</Form.Label>
                 <Form.Control
                   type="text"
                   value={editData.faculty}
@@ -378,7 +378,7 @@ function ProfilePage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">Lớp học</Form.Label>
+                <Form.Label className="fw-medium">Lớp</Form.Label>
                 <Form.Control
                   type="text"
                   value={editData.class_name}
@@ -387,7 +387,7 @@ function ProfilePage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-medium">Năm học</Form.Label>
+                <Form.Label className="fw-medium">Khóa</Form.Label>
                 <Form.Control
                   type="text"
                   value={editData.academic_year}
