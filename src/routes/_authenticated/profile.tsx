@@ -1,6 +1,6 @@
-import { Card, Button, Badge, Image, Nav, Row, Col } from 'react-bootstrap'
+import { Card, Button, Badge, Image, Nav, Row, Col, Modal, Form, Spinner } from 'react-bootstrap'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Camera,
   Check,
@@ -11,11 +11,16 @@ import {
 } from 'lucide-react'
 import { PROFILES } from '#/lib/fake-api'
 import type { Profile, UserRole } from '#/lib/fake-api'
+import axios from 'axios'
 
 export const Route = createFileRoute('/_authenticated/profile')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    user: typeof search.user === 'string' ? search.user : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const validSearch: { user?: string } = {}
+    if (typeof search.user === 'string') {
+      validSearch.user = search.user
+    }
+    return validSearch
+  },
   component: ProfilePage,
 })
 
@@ -44,14 +49,143 @@ function RoleBadge({ role }: { role: UserRole }) {
 
 function ProfilePage() {
   const { user: userId } = Route.useSearch()
-  const profile: Profile = (userId && PROFILES[userId]) || PROFILES.me
-  const isMe = profile.id === 'me'
+  const isMe = !userId
+
+  // Khởi tạo trạng thái rỗng/loading thay vì dùng dữ liệu giả PROFILES.me
+  const initialProfile = (userId && (PROFILES as any)[userId]) || {
+    id: '',
+    name: 'Đang tải...',
+    email: '',
+    phone_number: '',
+    faculty: '',
+    class_name: '',
+    year: '',
+    role: 'student',
+    avatar: 'https://github.com/shadcn.png'
+  }
+
+  const [profile, setProfile] = useState<any>(initialProfile)
   const [tab, setTab] = useState<string>('posts')
   const [following, setFollowing] = useState(!isMe)
+  const [isFetching, setIsFetching] = useState(false)
 
-  const friends = ['u1', 'u2', 'u3', 'u4', 'u5', 'u6']
-    .map((id) => PROFILES[id])
-    .filter(Boolean)
+  // Hàm Helper lấy token an toàn từ cả localStorage và sessionStorage
+  const getToken = () => localStorage.getItem('access_token') || localStorage.getItem('token') || sessionStorage.getItem('access_token') || sessionStorage.getItem('token')
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = getToken()
+        if (!token) return
+
+        const response = await axios.get('http://127.0.0.1:8000/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        
+        if (response.data.status) {
+          const realData = response.data.data
+          setProfile((prev: any) => ({
+            ...prev,
+            id: realData.id,
+            name: realData.full_name || prev.name,
+            email: realData.email || prev.email,
+            phone_number: realData.phone_number || '',
+            faculty: realData.faculty || '',
+            class_name: realData.class_name || '',
+            year: realData.academic_year || '',
+            role: realData.role ? (realData.role.toLowerCase().includes('admin') ? 'admin' : realData.role.toLowerCase()) : prev.role,
+            avatar: realData.avatar || prev.avatar,
+          }))
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải thông tin profile:', error)
+      }
+    }
+
+    if (isMe) {
+      fetchProfile()
+    }
+  }, [isMe])
+
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editData, setEditData] = useState({
+    full_name: '',
+    phone_number: '',
+    faculty: '',
+    class_name: '',
+    academic_year: '',
+  })
+
+  const handleOpenEdit = async () => {
+    setIsFetching(true)
+    try {
+      const token = getToken()
+      if (token) {
+        const response = await axios.get('http://127.0.0.1:8000/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        
+        if (response.data.status) {
+          const realData = response.data.data
+          setEditData({
+            full_name: realData.full_name || '',
+            phone_number: realData.phone_number || '',
+            faculty: realData.faculty || '',
+            class_name: realData.class_name || '',
+            academic_year: realData.academic_year || '',
+          })
+          setShowEditModal(true)
+          setIsFetching(false)
+          return
+        }
+      } else {
+        console.warn('Không tìm thấy token trong storage. Sử dụng dữ liệu mẫu.')
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy thông tin thật từ server:', error)
+    }
+
+    // Fallback: Dùng dữ liệu hiện tại trên state nếu API gặp lỗi
+    setEditData({
+      full_name: profile.name || '',
+      phone_number: profile.phone_number || '',
+      faculty: profile.faculty || '',
+      class_name: profile.class_name || '',
+      academic_year: profile.year || '',
+    })
+    setShowEditModal(true)
+    setIsFetching(false)
+  }
+
+  const handleSaveEdit = async () => {
+    try {
+      const token = getToken()
+      
+      const response = await axios.put('http://127.0.0.1:8000/api/user/profile', editData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      console.log('Cập nhật thành công:', response.data)
+      
+      // Cập nhật lại UI sau khi lưu thành công
+      setProfile((prev: any) => ({
+        ...prev,
+        name: editData.full_name,
+        phone_number: editData.phone_number,
+        faculty: editData.faculty,
+        class_name: editData.class_name,
+        year: editData.academic_year,
+      }))
+
+      alert('Cập nhật hồ sơ thành công!')
+      setShowEditModal(false)
+    } catch (error) {
+      console.error('Lỗi khi cập nhật hồ sơ:', error)
+      alert('Đã xảy ra lỗi khi cập nhật hồ sơ. Vui lòng kiểm tra lại!')
+    }
+  }
 
   return (
     <div>
@@ -108,19 +242,7 @@ function ProfilePage() {
                 <h3 className="mb-0 fw-bold">{profile.name}</h3>
                 <RoleBadge role={profile.role} />
               </div>
-              <p className="mb-2 text-secondary small">
-                {profile.major} · {profile.faculty}
-                {profile.year ? ` · ${profile.year}` : ''}
-              </p>
-              {profile.bio && (
-                <p
-                  className="mb-2 text-body-secondary"
-                  style={{ maxWidth: 560 }}
-                >
-                  {profile.bio}
-                </p>
-              )}
-              <div className="d-flex gap-3 small">
+              <div className="d-flex gap-3 small mt-2">
                 <span>
                   <strong>248</strong>{' '}
                   <span className="text-secondary">bài viết</span>
@@ -141,8 +263,10 @@ function ProfilePage() {
                 <Button
                   variant="outline-primary"
                   className="d-flex align-items-center gap-2"
+                  onClick={handleOpenEdit}
+                  disabled={isFetching}
                 >
-                  <SettingsIcon size={16} /> Chỉnh sửa hồ sơ
+                  {isFetching ? <Spinner size="sm" /> : <SettingsIcon size={16} />} Chỉnh sửa hồ sơ
                 </Button>
               ) : (
                 <>
@@ -198,11 +322,11 @@ function ProfilePage() {
                   Thông tin học thuật
                 </Card.Title>
                 {[
-                  ['Khoa', profile.faculty],
-                  ['Ngành', profile.major],
-                  ['Khoá', profile.year ?? '—'],
-                  ['Email', `${profile.handle}@student.uit.edu.vn`],
-                  profile.job ? ['Hiện đang', profile.job] : null,
+                  ['Khoa', profile.faculty || '—'],
+                  ['Lớp', profile.class_name || '—'],
+                  ['Khoá', profile.year || '—'],
+                  ['Email', profile.email || '—'],
+                  profile.phone_number ? ['Số điện thoại', profile.phone_number] : null,
                 ]
                   .filter((r): r is [string, string] => Array.isArray(r))
                   .map(([k, v]) => (
@@ -214,36 +338,6 @@ function ProfilePage() {
                       <span className="fw-semibold text-end">{v}</span>
                     </div>
                   ))}
-              </Card.Body>
-            </Card>
-
-            <Card className="border-0 shadow-sm rounded-4 mb-3">
-              <Card.Body>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <Card.Title className="fs-6 fw-bold mb-0">
-                    Bạn bè{' '}
-                    <span className="text-secondary fw-normal">· 384</span>
-                  </Card.Title>
-                  <a className="small fw-semibold text-decoration-none">
-                    Xem tất cả
-                  </a>
-                </div>
-                <Row xs={3} className="g-2">
-                  {friends.map((f) => (
-                    <Col key={f.id} className="text-center">
-                      <Image
-                        src={f.avatar}
-                        rounded
-                        width="100%"
-                        className="object-fit-cover"
-                        style={{ aspectRatio: '1/1' }}
-                      />
-                      <div className="small text-truncate mt-1" title={f.name}>
-                        {f.name.split(' ').slice(-2).join(' ')}
-                      </div>
-                    </Col>
-                  ))}
-                </Row>
               </Card.Body>
             </Card>
           </Col>
@@ -259,6 +353,66 @@ function ProfilePage() {
             </Card>
           </Col>
         </Row>
+
+        {/* Edit Profile Modal */}
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title className="fs-5 fw-bold">Chỉnh sửa hồ sơ</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Họ và tên</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.full_name}
+                  onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Số điện thoại</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.phone_number}
+                  onChange={(e) => setEditData({ ...editData, phone_number: e.target.value })}
+                  placeholder="09xx xxx xxx"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Ngành học</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.faculty}
+                  onChange={(e) => setEditData({ ...editData, faculty: e.target.value })}
+                  placeholder="Công nghệ phần mềm..."
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Lớp học</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.class_name}
+                  onChange={(e) => setEditData({ ...editData, class_name: e.target.value })}
+                  placeholder="SE114.O21..."
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Năm học</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editData.academic_year}
+                  onChange={(e) => setEditData({ ...editData, academic_year: e.target.value })}
+                  placeholder="2022-2026"
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Hủy</Button>
+            <Button variant="primary" onClick={handleSaveEdit}>Lưu thay đổi</Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   )
