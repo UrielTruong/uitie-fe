@@ -226,7 +226,6 @@ function ProfilePage() {
           >
             {[
               ['posts', 'Bài viết'],
-              ['about', 'Về tôi'],
               ['photos', 'Ảnh'],
               ['docs', 'Tài liệu'],
             ].map(([k, l]) => (
