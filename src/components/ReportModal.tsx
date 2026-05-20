@@ -3,7 +3,7 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { useCreateReport } from '#/api/useReport'; // Hook gọi API báo cáo bài viết của thành viên khác
 
 // ==========================================
-// 1. COMPONENT CỦA TRÍ: BÁO CÁO NGƯỜI DÙNG (USER REPORT)
+// 1. COMPONENT CỦA BẠN: BÁO CÁO NGƯỜI DÙNG (USER REPORT)
 // ==========================================
 interface ReportModalProps {
   isOpen: boolean;
@@ -80,7 +80,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl animate-fade-in">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl to-gray-900">
         <div className="mb-4 flex items-center justify-between border-b pb-2">
           <h3 className="text-lg font-bold text-gray-900">Báo cáo người dùng</h3>
           <button 
