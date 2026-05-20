@@ -325,20 +325,23 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           )}
         </div>
 
-        {/* Category tag */}
-        {post.category && (
-          <div className="mb-2">
-            {(() => {
-              const Icon = CATEGORY_ICONS[post.category.id] ?? Tag
-              return (
-                <span className="badge rounded-pill bg-primary bg-opacity-10 text-primary fw-normal px-2 py-1 d-inline-flex align-items-center gap-1">
-                  <Icon size={12} />
-                  <span className="small">{post.category.category_name}</span>
-                </span>
-              )
-            })()}
-          </div>
-        )}
+        {/* Tags */}
+        <div className="mb-2 d-flex flex-wrap gap-2">
+          {post.category && (
+            <span className="badge rounded-pill bg-primary bg-opacity-10 text-primary fw-normal px-2 py-1 d-inline-flex align-items-center gap-1">
+              {(() => {
+                const Icon = CATEGORY_ICONS[post.category.id] ?? Tag
+                return <Icon size={12} />
+              })()}
+              <span className="small">{post.category.category_name}</span>
+            </span>
+          )}
+          {post.status.toLowerCase() === 'pending' && (
+            <span className="badge rounded-pill bg-warning text-dark fw-normal px-2 py-1 d-inline-flex align-items-center gap-1">
+              <span className="small">Chờ duyệt</span>
+            </span>
+          )}
+        </div>
 
         {/* Content */}
         <Card.Text className="mb-4" style={{ whiteSpace: 'pre-line' }}>
