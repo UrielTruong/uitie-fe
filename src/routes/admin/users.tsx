@@ -10,11 +10,13 @@ import {
 } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 import { exportUsersPdf, useGetUserList } from '#/api/useAdmin'
-import { FileDown, Pencil, Plus, Search, Trash } from 'lucide-react'
+import { FileDown, Pencil, Plus, Search, Trash, Lock, Unlock } from 'lucide-react'
 import React, { useState } from 'react'
 import UserModal from '#/components/admin/UserModal'
 import type { User, UserRole, UserStatus } from '#/types/user'
 import ConfirmDeleteUserModal from '#/components/admin/ConfirmDeleteUser'
+import { useLockUser, useUnlockUser } from '#/api/useUser'
+import ConfirmLockUserModal from 'src/components/admin/ConfirmLockUser.tsx'
 
 export const Route = createFileRoute('/admin/users')({
   component: AdminUsersPage,
@@ -43,6 +45,10 @@ function AdminUsersPage() {
   const [confirmDeleteUserModal, setConfirmDeleteUserModal] = useState<
     string | undefined
   >(undefined)
+  const [confirmLockUserModal, setConfirmLockUserModal] = useState<string | undefined>(undefined)
+  
+  const lockUserMutation = useLockUser()
+  const unlockUserMutation = useUnlockUser()
 
   const [editingUser, setEditingUser] = useState<User | null>(null)
 
@@ -82,6 +88,21 @@ function AdminUsersPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setSearchQuery(search)
+  }
+
+  // --- HÀM XỬ LÝ LOCK / UNLOCK ---
+  const handleOpenConfirmLockUser = (user: User) => {
+    setConfirmLockUserModal(user.id)
+  }
+
+  const handleCloseConfirmLockUser = () => {
+    setConfirmLockUserModal(undefined)
+  }
+
+  const handleUnlockUser = (userId: string | number) => {
+    if (confirm('Bạn có chắc chắn muốn mở khóa tài khoản này không?')) {
+      unlockUserMutation.mutate(userId)
+    }
   }
 
   return (
@@ -184,6 +205,28 @@ function AdminUsersPage() {
                         >
                           <Pencil size={18} />
                         </Button>
+                        {u.status === 'Locked' ? (
+                          // Nếu tài khoản đang bị khóa -> Hiện nút Mở khóa (Unlock) màu xanh dương/lá
+                          <Button
+                          variant="link"
+                          className="text-decoration-none p-2 rounded-3 text-success"
+                          onClick={() => handleUnlockUser(u.id)}
+                          title="Mở khóa tài khoản"
+                          >
+                            <Unlock size={18} />
+                          </Button>
+                        ) : (
+                          // Nếu tài khoản đang hoạt động -> Hiện nút Khóa (Lock) màu đỏ
+                          <Button
+                          variant="link"
+                          className="text-decoration-none p-2 rounded-3 text-danger"
+                          onClick={() => handleOpenConfirmLockUser(u as User)}
+                          title="Khóa tài khoản"
+                          >
+                            <Lock size={18} />
+                          </Button>
+                        )}
+
                         {/* <Button
                           variant="link"
                           className="text-decoration-none p-2 rounded-3 text-secondary"
@@ -212,6 +255,12 @@ function AdminUsersPage() {
         onClose={handleCloseConfirmDeleteUser}
         userId={confirmDeleteUserModal}
       />
+
+      <ConfirmLockUserModal
+        visible={!!confirmLockUserModal}
+        onClose={handleCloseConfirmLockUser}
+        userId={confirmLockUserModal}
+      />  
     </div>
   )
 }
