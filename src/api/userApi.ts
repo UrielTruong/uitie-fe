@@ -27,3 +27,22 @@ export const getAdminPostList = async (search?: string): Promise<Response<Post[]
   const res = await axiosClient.get<Response<Post[]>>('/admin/post', { params: search ? { search } : undefined })
   return res.data
 }
+
+/**
+ * Khóa tài khoản kèm lý do nhập tay
+ */
+export interface LockUserPayload {
+  reason: string
+}
+export const lockUser = async (id: string | number, payload: LockUserPayload): Promise<Response<undefined>> => {
+  const res = await axiosClient.put<Response<undefined>>(`/admin/user/${id}/lock`, payload)
+  return res.data
+}
+
+/**
+ * Mở khóa tài khoản
+ */
+export const unlockUser = async (id: string | number): Promise<Response<undefined>> => {
+  const res = await axiosClient.put<Response<undefined>>(`/admin/user/${id}/unlock`)
+  return res.data
+}
