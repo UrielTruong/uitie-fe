@@ -4,16 +4,15 @@ import { useState } from 'react'
 import {
   Camera,
   Check,
-  Heart,
   MessageSquare,
   Settings as SettingsIcon,
-  Share2,
   UserPlus,
   BookOpen,
 } from 'lucide-react'
 import type { UserRole } from '#/lib/fake-api'
 import { useProfile, useUpdateProfile, useUserPosts } from '#/api/useProfile'
 import toast from 'react-hot-toast'
+import FeedPostCard from '#/components/FeedPostCard'
 
 export const Route = createFileRoute('/_authenticated/profile')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -278,46 +277,7 @@ function ProfilePage() {
                   </div>
                 ) : displayedPosts.length > 0 ? (
                   displayedPosts.map((post: any) => (
-                    <Card key={post.id} className="border-0 shadow-sm rounded-4">
-                      <Card.Body>
-                        <div className="d-flex align-items-center gap-2 mb-3">
-                          <Image
-                            src={post.user?.avatar || profileData.avatar || 'https://github.com/shadcn.png'}
-                            roundedCircle
-                            width={40}
-                            height={40}
-                            className="object-fit-cover border"
-                          />
-                          <div>
-                            <div className="fw-bold">{post.user?.full_name || profileData.full_name || 'Người dùng ẩn danh'}</div>
-                            <div className="small text-secondary d-flex align-items-center gap-1">
-                              <span>{post.updated_at ? new Date(post.updated_at).toLocaleDateString('vi-VN') : 'Vừa xong'}</span>
-                              <span>·</span>
-                              <Badge bg="light" text="dark" className="border fw-normal">{post.category?.category_name || 'Không có danh mục'}</Badge>
-                              {post.status === 'Pending' && (
-                                <>
-                                  <span>·</span>
-                                  <Badge bg="warning" text="dark" className="fw-normal">Chờ duyệt</Badge>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="mb-0 text-break" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
-                        
-                        <div className="d-flex align-items-center gap-4 mt-3 pt-3 border-top">
-                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
-                            <Heart size={18} /> Thích
-                          </Button>
-                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
-                            <MessageSquare size={18} /> Bình luận
-                          </Button>
-                          <Button variant="link" className="text-secondary text-decoration-none p-0 d-flex align-items-center gap-2">
-                            <Share2 size={18} /> Chia sẻ
-                          </Button>
-                        </div>
-                      </Card.Body>
-                    </Card>
+                    <FeedPostCard key={post.id} post={{ ...post, user: post.user || profileData }} />
                   ))
                 ) : (
                   <Card className="border-0 shadow-sm rounded-4 text-center py-5">
