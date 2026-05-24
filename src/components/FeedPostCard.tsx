@@ -123,6 +123,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // edit form state
   const [editContent, setEditContent] = useState('')
@@ -206,6 +207,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
       onSuccess: (res) => {
         setShareCount(res?.data?.shares ?? shareCount + 1)
         toast.success('Đã chia sẻ bài viết thành công!')
+        setShowShareModal(false)
       },
       onError: () => toast.error('Lỗi khi chia sẻ bài viết.'),
     })
@@ -476,7 +478,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
 
           <Button
             variant="link"
-            onClick={handleShare}
+            onClick={() => setShowShareModal(true)}
             disabled={isSharing}
             className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
           >
@@ -775,6 +777,49 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             disabled={isDeleting}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ── Share modal ───────────────────────────────────────────────────────── */}
+      <Modal
+        show={showShareModal}
+        onHide={() => setShowShareModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận chia sẻ</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-0 text-secondary">
+            Bạn có muốn chia sẻ bài viết này lên tường nhà không?
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowShareModal(false)}
+            disabled={isSharing}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleShare}
+            disabled={isSharing}
+          >
+            {isSharing ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-1"
+                  role="status"
+                  aria-hidden="true"
+                />
+                Đang chia sẻ...
+              </>
+            ) : (
+              'Chia sẻ'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
