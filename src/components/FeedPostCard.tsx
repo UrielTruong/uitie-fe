@@ -31,7 +31,8 @@ import { presignAttachments, uploadToMinIO } from '#/api/attachmentApi'
 import { Button, Card, Dropdown, Form, Modal } from 'react-bootstrap'
 import UserAvatar from './UserAvatar'
 import { authStore } from '#/lib/auth'
-import { useDeletePost, useUpdatePost } from '#/api/usePost'
+import { useDeletePost, useUpdatePost, useToggleLike, useSharePost } from '#/api/usePost'
+import { useStore } from '@tanstack/react-store'
 import toast from 'react-hot-toast'
 import { CATEGORIES } from '#/types/category'
 import CommentSection from './CommentSection'
@@ -105,8 +106,9 @@ interface FeedPostCardProps {
 }
 
 export default function FeedPostCard({ post }: FeedPostCardProps) {
-  const [liked, setLiked] = useState(post.liked)
-  const [likeCount, setLikeCount] = useState(post.likes)
+  const [liked, setLiked] = useState(Boolean(post.liked))
+  const [likeCount, setLikeCount] = useState(Number(post.likes) || 0)
+  const [shareCount, setShareCount] = useState(Number(post.shares) || 0)
   const [bookmarked, setBookmarked] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [showComments, setShowComments] = useState(false)
@@ -116,6 +118,8 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const user = useStore(authStore, (s) => s.user)
   const { mutate: mutateUpdatePost, isPending: isUpdating } = useUpdatePost()
   const { mutate: mutateDeletePost, isPending: isDeleting } = useDeletePost()
+  const { mutate: mutateToggleLike, isPending: isLiking } = useToggleLike()
+  const { mutate: mutateSharePost, isPending: isSharing } = useSharePost()
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -178,6 +182,33 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
       setNewFiles((prev) => [...prev, ...valid])
     }
     if (editFileInputRef.current) editFileInputRef.current.value = ''
+  }
+
+  function handleLike() {
+    if (isLiking) return
+    const previousLiked = liked
+    const previousCount = likeCount
+    setLiked(!previousLiked)
+    setLikeCount((prev) => (previousLiked ? prev - 1 : prev + 1))
+
+    mutateToggleLike(post.id, {
+      onError: () => {
+        setLiked(previousLiked)
+        setLikeCount(previousCount)
+        toast.error('Lỗi khi thực hiện thao tác thích bài viết.')
+      },
+    })
+  }
+
+  function handleShare() {
+    if (isSharing) return
+    mutateSharePost(post.id, {
+      onSuccess: (res) => {
+        setShareCount(res?.data?.shares ?? shareCount + 1)
+        toast.success('Đã chia sẻ bài viết thành công!')
+      },
+      onError: () => toast.error('Lỗi khi chia sẻ bài viết.'),
+    })
   }
 
   function removeExistingAttachment(id: number) {
@@ -421,6 +452,8 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         <div className="d-flex align-items-center gap-2 pt-3 border-top">
           <Button
             variant="link"
+            onClick={handleLike}
+            disabled={isLiking}
             className={`d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 ${
               liked ? 'text-danger bg-danger bg-opacity-10' : 'text-secondary'
             }`}
@@ -443,10 +476,12 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
 
           <Button
             variant="link"
+            onClick={handleShare}
+            disabled={isSharing}
             className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
           >
             <Share2 size={18} />
-            <span className="small fw-medium">{post.shares}</span>
+            <span className="small fw-medium">{shareCount}</span>
           </Button>
 
           <Button
