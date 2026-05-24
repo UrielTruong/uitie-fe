@@ -24,13 +24,14 @@ import {
   Upload,
   X,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
+import { useStore } from '@tanstack/react-store'
 import { presignAttachments, uploadToMinIO } from '#/api/attachmentApi'
 import { Button, Card, Dropdown, Form, Modal } from 'react-bootstrap'
 import UserAvatar from './UserAvatar'
 import { authStore } from '#/lib/auth'
 import { useDeletePost, useUpdatePost } from '#/api/usePost'
-import { useStore } from '@tanstack/react-store'
 import toast from 'react-hot-toast'
 import { CATEGORIES } from '#/types/category'
 
@@ -108,6 +109,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [bookmarked, setBookmarked] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
 
+  const currentUser = useStore(authStore, (s) => s.user)
   const user = useStore(authStore, (s) => s.user)
   const { mutate: mutateUpdatePost, isPending: isUpdating } = useUpdatePost()
   const { mutate: mutateDeletePost, isPending: isDeleting } = useDeletePost()
@@ -279,9 +281,23 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         {/* Author */}
         <div className="d-flex justify-content-between align-items-start mb-3">
           <div className="d-flex align-items-center gap-3">
-            <UserAvatar fullName={post.author.full_name} />
+            <Link
+              to="/profile"
+              search={
+                currentUser?.id === post.author.id
+                  ? {}
+                  : { user: String(post.author.id) }
+              }
+              className="text-decoration-none"
+            >
+              <UserAvatar fullName={post.author.full_name} />
+            </Link>
             <div>
-              <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
+              <Link to="/profile" search={
+                currentUser?.id === post.author.id ? {} : { user: String(post.author.id) }
+              } className="text-decoration-none text-body">
+                <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
+              </Link>
               <div className="d-flex align-items-center gap-1 text-muted small">
                 {post.visibility === 'Private' ? (
                   <Lock size={11} />
