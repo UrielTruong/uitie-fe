@@ -277,7 +277,7 @@ function ProfilePage() {
                   </div>
                 ) : displayedPosts.length > 0 ? (
                   displayedPosts.map((post: any) => (
-                    <FeedPostCard key={post.id} post={{ ...post, user: post.user || profileData }} />
+                    <FeedPostCard key={post.id} post={{ ...post, author: post.user || post.author || profileData }} />
                   ))
                 ) : (
                   <Card className="border-0 shadow-sm rounded-4 text-center py-5">
