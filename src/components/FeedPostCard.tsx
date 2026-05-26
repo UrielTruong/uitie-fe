@@ -34,6 +34,7 @@ import { authStore } from '#/lib/auth'
 import { useDeletePost, useUpdatePost } from '#/api/usePost'
 import toast from 'react-hot-toast'
 import { CATEGORIES } from '#/types/category'
+import CommentSection from './CommentSection'
 
 const MAX_FILES = 5
 const ACCEPTED_EXTENSIONS = [
@@ -108,6 +109,8 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [likeCount, setLikeCount] = useState(post.likes)
   const [bookmarked, setBookmarked] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [commentCount, setCommentCount] = useState(post.comments || 0)
 
   const currentUser = useStore(authStore, (s) => s.user)
   const user = useStore(authStore, (s) => s.user)
@@ -432,9 +435,10 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           <Button
             variant="link"
             className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
+            onClick={() => setShowComments((prev) => !prev)}
           >
             <MessageCircle size={18} />
-            <span className="small fw-medium">{post.comments}</span>
+            <span className="small fw-medium">{commentCount}</span>
           </Button>
 
           <Button
@@ -469,6 +473,13 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             />
           </Button>
         </div>
+
+        {showComments && (
+          <CommentSection 
+            postId={post.id} 
+            onCountChange={(delta) => setCommentCount((prev) => prev + delta)}
+          />
+        )}
       </Card.Body>
 
       {/* ── Edit modal ─────────────────────────────────────────────────────────── */}

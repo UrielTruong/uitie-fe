@@ -24,7 +24,7 @@
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
     "@tanstack/store": "latest",
-    "axios": "^1.15.2",
+    "axios": "^1.16.1",
     "bootstrap": "^5.3.8",
     "i18next": "^26.0.3",
     "i18next-browser-languagedetector": "^8.2.1",
