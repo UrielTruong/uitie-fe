@@ -13,9 +13,13 @@ export const validateReport = async (reportId: number, status: ReportStatus): Pr
   return res.data
 }
 
-// --- API dành cho Người dùng (Thêm mới) ---
-export const createReport = async (payload: { post_id: number; reason: string }): Promise<any> => {
-  const res = await axiosClient.post('/reports', payload)
+// --- API dành cho Người dùng (sửa lại chuẩn endpoint) ---
+export const createReport = async (
+  postId: number | string, 
+  payload: { reason: string }
+): Promise<any> => {
+  // Gọi trúng endpoint Laravel thực tế và chỉ truyền reason vào Body
+  const res = await axiosClient.post(`/user/post/${postId}/report`, payload)
   return res.data
 }
 

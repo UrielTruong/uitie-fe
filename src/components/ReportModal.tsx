@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { useCreateReport } from '#/api/useReport'; // Đảm bảo đường dẫn này khớp với dự án của bạn
+import { useCreateReport } from '#/api/useReport'; 
+import { toast } from 'react-hot-toast'; // Thêm import toast nếu chưa có
 
 interface ReportModalProps {
   postId: number;
@@ -9,24 +10,27 @@ interface ReportModalProps {
 
 export default function ReportModal({ postId, onClose }: ReportModalProps) {
   const [reason, setReason] = useState('');
-  
-  // Sử dụng Hook thực tế thay vì giả lập
   const { mutate: createReport, isPending } = useCreateReport();
 
-  const handleSubmit = () => {
-    // 1. Kiểm tra dữ liệu đầu vào
-    if (!reason.trim()) {
-      return; // Thông báo lỗi đã được xử lý tự động hoặc bạn có thể thêm toast ở đây
+  // Đổi sang handle bằng Form Event để bắt được phím Enter
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
+      toast.error('Vui lòng nhập lý do báo cáo bài viết!');
+      return; 
     }
 
-    // 2. Gọi API thực tế thông qua Hook
+    // Truyền đúng cấu trúc tham số mới đã sửa ở Hook
     createReport(
       { 
-        post_id: postId, 
-        reason: reason 
+        postId: postId, 
+        reason: trimmedReason 
       },
       {
         onSuccess: () => {
+          setReason('');
           onClose(); // Chỉ đóng cửa sổ khi API trả về thành công
         },
       }
@@ -34,54 +38,59 @@ export default function ReportModal({ postId, onClose }: ReportModalProps) {
   };
 
   return (
-    <Modal show={true} onHide={onClose} centered>
+    <Modal show={true} onHide={onClose} centered backdrop="static">
       <Modal.Header closeButton>
-        <Modal.Title className="text-danger">
+        <Modal.Title className="text-danger fw-bold h5">
           <i className="fa-solid fa-triangle-exclamation me-2"></i> 
           Báo cáo vi phạm
         </Modal.Title>
       </Modal.Header>
       
-      <Modal.Body>
-        <Form.Group>
-          <Form.Label className="fw-bold">
-            Lý do báo cáo bài viết #{postId}:
-          </Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={4}
-            placeholder="Ví dụ: Nội dung lừa đảo, xúc phạm, spam, sai sự thật..."
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            disabled={isPending}
-            autoFocus
-          />
-        </Form.Group>
-      </Modal.Body>
+      {/* Bọc Form bắt sự kiện onSubmit ở đây */}
+      <Form onSubmit={handleSubmit}>
+        <Modal.Body>
+          <Form.Group controlId="reportReason">
+            <Form.Label className="fw-bold">
+              Lý do báo cáo bài viết #{postId}:
+            </Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              placeholder="Ví dụ: Nội dung lừa đảo, xúc phạm, spam, sai sự thật..."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              disabled={isPending}
+              required
+              autoFocus
+            />
+          </Form.Group>
+        </Modal.Body>
 
-      <Modal.Footer>
-        <Button 
-          variant="secondary" 
-          onClick={onClose} 
-          disabled={isPending}
-        >
-          Hủy bỏ
-        </Button>
-        <Button 
-          variant="danger" 
-          onClick={handleSubmit} 
-          disabled={isPending || !reason.trim()}
-        >
-          {isPending ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              Đang gửi...
-            </>
-          ) : (
-            'Gửi báo cáo'
-          )}
-        </Button>
-      </Modal.Footer>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={onClose} 
+            disabled={isPending}
+          >
+            Hủy bỏ
+          </Button>
+          {/* Chuyển button sang type="submit" */}
+          <Button 
+            variant="danger" 
+            type="submit" 
+            disabled={isPending || !reason.trim()}
+          >
+            {isPending ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Đang gửi...
+              </>
+            ) : (
+              'Gửi báo cáo'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Form>
     </Modal>
   );
 }
