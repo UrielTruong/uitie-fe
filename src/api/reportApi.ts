@@ -29,3 +29,20 @@ export const reportApi = {
   validateReport,
   createReport,
 }
+// --- API Báo cáo Tài khoản (Thư bổ sung) ---
+export const createUserReport = async (
+  userId: number | string, 
+  payload: { reason: string }
+): Promise<any> => {
+  // Gọi trúng endpoint Laravel thực tế: Báo cáo user vi phạm thông qua ID trên URL
+  const res = await axiosClient.post(`/user/${userId}/report`, payload)
+  return res.data
+}
+
+// Gom tất cả vào một đối tượng để dễ quản lý
+export const reportApi = {
+  getReportList,
+  validateReport,
+  createReport,
+  createUserReport, 
+}

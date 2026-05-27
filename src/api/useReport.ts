@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getReportList, validateReport, createReport } from './reportApi'
+import { getReportList, validateReport, createReport, createUserReport } from './reportApi'
 import type { ReportStatus } from '#/types/report'
 import { toast } from 'react-hot-toast'
 
@@ -44,6 +44,24 @@ export const useCreateReport = () => {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Gửi báo cáo thất bại.')
+    },
+  })
+}
+// Hook gửi báo cáo Tài khoản vi phạm (bổ sung cho Student)
+export const useCreateUserReport = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userId, reason }: { userId: number | string; reason: string }) => 
+      createUserReport(userId, { reason }),
+    onSuccess: () => {
+      // Làm tươi danh sách báo cáo bên admin và danh sách user nếu cần
+      queryClient.invalidateQueries({ queryKey: ['report', 'list'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      toast.success('Báo cáo tài khoản vi phạm thành công!')
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Báo cáo tài khoản thất bại.')
     },
   })
 }
