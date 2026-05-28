@@ -35,7 +35,7 @@ export const useToggleLike = () => {
 export const useSharePost = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => sharePost(id),
+    mutationFn: ({ id, content }: { id: number; content?: string }) => sharePost(id, content),
     onSuccess: () => {
       // Cập nhật lại Feed để hiển thị bài Share mới ngay lập tức
       queryClient.invalidateQueries({ queryKey: ['post', 'feed'] })

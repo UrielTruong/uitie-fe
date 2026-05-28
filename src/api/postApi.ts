@@ -45,5 +45,5 @@ export const deletePost = (id: number) =>
 export const toggleLike = (id: number) =>
   axiosClient.post(`/post/${id}/like`).then((res) => res.data)
 
-export const sharePost = (id: number) =>
-  axiosClient.post(`/post/${id}/share`).then((res) => res.data)
+export const sharePost = (id: number, content?: string) =>
+  axiosClient.post(`/post/${id}/share`, { content }).then((res) => res.data)
