@@ -14,14 +14,28 @@ export const validateReport = async (reportId: number, status: ReportStatus): Pr
 }
 
 // --- API dành cho Người dùng (Thêm mới) ---
-export const createReport = async (payload: { post_id: number; reason: string }): Promise<any> => {
-  const res = await axiosClient.post('/reports', payload)
+// 1. Báo cáo BÀI VIẾT (Khớp với Route::prefix('post'))
+export const createReport = async (
+  postId: number | string, 
+  payload: { reason: string }
+): Promise<any> => {
+  const res = await axiosClient.post(`/post/${postId}/report`, payload)
   return res.data
 }
 
-// Gom tất cả vào một đối tượng để dễ quản lý (optional)
+// 2. Báo cáo TÀI KHOẢN VI PHẠM (Khớp với Route::prefix('user'))
+export const createUserReport = async (
+  userId: number | string, 
+  payload: { reason: string }
+): Promise<any> => {
+  const res = await axiosClient.post(`/user/${userId}/report`, payload)
+  return res.data
+}
+
+// Gom tất cả vào một đối tượng để dễ quản lý
 export const reportApi = {
   getReportList,
   validateReport,
   createReport,
+  createUserReport, 
 }

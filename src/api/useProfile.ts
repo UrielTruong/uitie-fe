@@ -6,10 +6,12 @@ export function useProfile(userId?: string) {
   return useQuery({
     queryKey: ['profile', userId || 'me'],
     queryFn: async () => {
-      const url = userId ? `/user/profile?user_id=${userId}` : '/user/profile'
-      // axiosClient đã tự đính kèm baseURL và Bearer Token
+      // Nếu có userId thì gọi `/user/{id}`, nếu không thì gọi `/user/profile` lấy của chính mình
+      const url = userId ? `/user/${userId}` : '/user/profile'
+      
       const response = await axiosClient.get(url)
-      return response.data.data
+      // Backend trả về thẳng object user, lấy luôn response.data chứ không lấy .data.data nha Thư
+      return response.data
     },
   })
 }
