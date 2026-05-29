@@ -17,10 +17,11 @@ interface DeletePostResponse {
   status: boolean
   message: string
 }
-export const fetchFeed = async (): Promise<Post[]> => {
-    const res = await axiosClient.get('/post')
-    return res.data.data
-  }
+export const fetchFeed = async (scope: 'all' | 'following' = 'all') => {
+  // Chỉ gọi thuần túy kèm scope, không tự thêm header thủ công nữa
+  const response = await axiosClient.get(`/post?scope=${scope}`)
+  return response.data
+}
 
 export const createPost = (payload: CreatePostPayload) =>
   axiosClient
