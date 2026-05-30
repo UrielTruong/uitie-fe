@@ -6,11 +6,12 @@ import {
   Badge,
   Button,
   Form,
-  InputGroup,
+  Row,
+  Col,
 } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 import { exportUsersPdf, useGetUserList } from '#/api/useAdmin'
-import { FileDown, Pencil, Plus, Search, Trash, Lock, Unlock } from 'lucide-react'
+import { FileDown, Pencil, Plus, Search, Filter, Lock, Unlock } from 'lucide-react'
 import React, { useState } from 'react'
 import UserModal from '#/components/admin/UserModal'
 import type { User, UserRole, UserStatus } from '#/types/user'
@@ -24,10 +25,32 @@ export const Route = createFileRoute('/admin/users')({
 
 function AdminUsersPage() {
   const { t } = useTranslation()
-  const [search, setSearch] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const { data, isLoading, isError } = useGetUserList(searchQuery)
-  const users = data?.data ?? []
+  
+  // 🚩 1. Thiết lập các State lưu bộ lọc (Filters)
+  const [keyword, setKeyword] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('')
+
+  // Gọi API lấy danh sách User gốc về
+  const { data, isLoading, isError } = useGetUserList()
+  const rawUsers = data?.data ?? []
+
+  // 🚩 2. Logic lọc thông minh trực tiếp trên Front-end
+  const users = rawUsers.filter((u) => {
+    // Lọc theo Từ khóa (Tìm tương đối theo Tên hoặc Email, không phân biệt hoa thường)
+    if (keyword.trim()) {
+      const searchKey = keyword.toLowerCase()
+      const fullNameMatch = u.full_name?.toLowerCase().includes(searchKey) ?? false
+      const emailMatch = u.email?.toLowerCase().includes(searchKey) ?? false
+      if (!fullNameMatch && !emailMatch) return false
+    }
+
+    // Lọc theo Trạng thái (Active, Inactive, Locked)
+    if (statusFilter && u.status !== statusFilter) {
+      return false
+    }
+
+    return true
+  })
 
   const ROLE_VARIANT: Record<UserRole, string> = {
     'Super Admin': 'danger',
@@ -35,10 +58,11 @@ function AdminUsersPage() {
     Student: 'secondary',
   }
 
+  // Cập nhật lại màu sắc Badge Trạng thái cho trực quan
   const STATUS_VARIANT: Record<UserStatus, string> = {
     Active: 'success',
     Inactive: 'secondary',
-    Locked: 'secondary',
+    Locked: 'danger', // Đổi sang đỏ cho nổi bật trạng thái bị khóa
   }
 
   const [userModalVisible, setUserModalVisible] = useState(false)
@@ -51,7 +75,6 @@ function AdminUsersPage() {
   const unlockUserMutation = useUnlockUser()
 
   const [editingUser, setEditingUser] = useState<User | null>(null)
-
   const [isExporting, setIsExporting] = useState(false)
 
   const handleOpenAddUserModal = () => {
@@ -68,10 +91,6 @@ function AdminUsersPage() {
     setEditingUser(null)
   }
 
-  const handleOpenConfirmDeleteUser = (user: User) => {
-    setConfirmDeleteUserModal(user.id)
-  }
-
   const handleCloseConfirmDeleteUser = () => {
     setConfirmDeleteUserModal(undefined)
   }
@@ -85,9 +104,10 @@ function AdminUsersPage() {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSearchQuery(search)
+  // 🚩 Hàm xóa nhanh bộ lọc người dùng
+  const handleClearFilters = () => {
+    setKeyword('')
+    setStatusFilter('')
   }
 
   // --- HÀM XỬ LÝ LOCK / UNLOCK ---
@@ -107,16 +127,16 @@ function AdminUsersPage() {
 
   return (
     <div className="container py-4 px-3" style={{ maxWidth: '1100px' }}>
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h4 className="fw-bold mb-1">{t('admin_users_title')}</h4>
-          <p className="text-secondary mb-4">{t('admin_users_subtitle')}</p>
+          <p className="text-secondary mb-0">{t('admin_users_subtitle')}</p>
         </div>
 
         <div className="d-flex align-items-center gap-2">
           <Button
             variant="outline-danger"
-            className="d-flex align-items-center gap-2"
+            className="d-flex align-items-center gap-2 rounded-3"
             onClick={handleExportPdf}
             disabled={isExporting}
           >
@@ -125,27 +145,68 @@ function AdminUsersPage() {
           </Button>
 
           <Button
-            className="d-flex align-items-center gap-2"
+            className="d-flex align-items-center gap-2 rounded-3"
             onClick={handleOpenAddUserModal}
           >
             <Plus size={18} />
-            <p>{t('admin_users_add_user')}</p>
+            <span>{t('admin_users_add_user')}</span>
           </Button>
         </div>
       </div>
 
-      <Form onSubmit={handleSearch} className="mb-3">
-        {/* <InputGroup style={{ maxWidth: '360px' }}>
-          <Form.Control
-            placeholder="Tìm kiếm người dùng..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button variant="outline-secondary" type="submit">
-            <Search size={16} />
-          </Button>
-        </InputGroup> */}
-      </Form>
+      {/* 🚩 3. ĐẮP THANH BỘ LỌC TÌM KIẾM USER SIÊU MƯỢT */}
+      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-body-tertiary">
+        <Card.Body className="p-3">
+          <Row className="g-3 align-items-end">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-semibold text-secondary d-flex align-items-center gap-1">
+                  <Search size={14} /> Tìm kiếm tài khoản
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Nhập tên hoặc email người dùng..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="rounded-3"
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-semibold text-secondary d-flex align-items-center gap-1">
+                  <Filter size={14} /> Trạng thái
+                </Form.Label>
+                <Form.Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="rounded-3"
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="Active">Active (Hoạt động)</option>
+                  <option value="Inactive">Inactive (Chưa kích hoạt)</option>
+                  <option value="Locked">Locked (Đang bị khóa)</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+
+            <Col md={2} className="d-grid">
+              {(keyword || statusFilter) ? (
+                <Button 
+                  variant="link" 
+                  className="text-danger text-decoration-none text-center p-2 small"
+                  onClick={handleClearFilters}
+                >
+                  Xóa bộ lọc
+                </Button>
+              ) : (
+                <div style={{ height: '38px' }}></div>
+              )}
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
       <Card className="border-0 shadow-sm rounded-4">
         <Card.Body className="p-0">
@@ -164,21 +225,21 @@ function AdminUsersPage() {
                   <th className="py-3">{t('admin_users_col_email')}</th>
                   <th className="py-3">{t('admin_users_col_role')}</th>
                   <th className="py-3">{t('admin_users_col_status')}</th>
-                  <th className="py-3">{t('admin_users_col_action')}</th>
+                  <th className="py-3" style={{ width: '120px' }}>{t('admin_users_col_action')}</th>
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center text-secondary py-4">
-                      {t('admin_users_empty')}
+                    <td colSpan={6} className="text-center text-secondary py-4">
+                      Không tìm thấy người dùng nào phù hợp.
                     </td>
                   </tr>
                 ) : (
                   users.map((u) => (
                     <tr key={u.id}>
                       <td className="px-4">{u.id}</td>
-                      <td className="px-4">{u.full_name ?? '—'}</td>
+                      <td className="px-4 fw-medium">{u.full_name ?? '—'}</td>
                       <td>{u.email}</td>
                       <td>
                         <Badge
@@ -202,38 +263,29 @@ function AdminUsersPage() {
                           variant="link"
                           className="text-decoration-none p-2 rounded-3 text-secondary"
                           onClick={() => handleOpenEditUserModal(u as User)}
+                          title="Chỉnh sửa thông tin"
                         >
                           <Pencil size={18} />
                         </Button>
                         {u.status === 'Locked' ? (
-                          // Nếu tài khoản đang bị khóa -> Hiện nút Mở khóa (Unlock) màu xanh dương/lá
                           <Button
-                          variant="link"
-                          className="text-decoration-none p-2 rounded-3 text-success"
-                          onClick={() => handleUnlockUser(u.id)}
-                          title="Mở khóa tài khoản"
+                            variant="link"
+                            className="text-decoration-none p-2 rounded-3 text-success"
+                            onClick={() => handleUnlockUser(u.id)}
+                            title="Mở khóa tài khoản"
                           >
                             <Unlock size={18} />
                           </Button>
                         ) : (
-                          // Nếu tài khoản đang hoạt động -> Hiện nút Khóa (Lock) màu đỏ
                           <Button
-                          variant="link"
-                          className="text-decoration-none p-2 rounded-3 text-danger"
-                          onClick={() => handleOpenConfirmLockUser(u as User)}
-                          title="Khóa tài khoản"
+                            variant="link"
+                            className="text-decoration-none p-2 rounded-3 text-danger"
+                            onClick={() => handleOpenConfirmLockUser(u as User)}
+                            title="Khóa tài khoản"
                           >
                             <Lock size={18} />
                           </Button>
                         )}
-
-                        {/* <Button
-                          variant="link"
-                          className="text-decoration-none p-2 rounded-3 text-secondary"
-                          onClick={() => handleOpenConfirmDeleteUser(u as User)}
-                        >
-                          <Trash size={18} />
-                        </Button> */}
                       </td>
                     </tr>
                   ))
