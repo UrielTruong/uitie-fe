@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createPost, deletePost, fetchFeed, searchPost, updatePost, toggleLike, sharePost } from './postApi'
 import type { CreatePostPayload, Post, UpdatePostPayload } from '#/types/post'
 
-export const useFeedPosts = () => {
+export const useFeedPosts = (scope: 'all' | 'following' = 'all') => {
   return useQuery({
-    queryKey: ['post', 'feed'],
-    queryFn: fetchFeed,
+    queryKey: ['post', 'feed', scope], // 🚩 Thêm scope vào đây để tự động fetch lại khi đổi tab
+    queryFn: () => fetchFeed(scope),   // 🚩 Truyền scope sang cho file postApi xử lý
   })
 }
 
