@@ -1,6 +1,6 @@
 import { exportPostsPdf, useGetPostList, useValidatePost } from '#/api/useAdmin'
 import { createFileRoute } from '@tanstack/react-router'
-import { Check, FileDown, X } from 'lucide-react'
+import { Check, FileDown, X, Filter } from 'lucide-react'
 import { useState } from 'react'
 import {
   Badge,
@@ -10,6 +10,8 @@ import {
   Modal,
   Spinner,
   Table,
+  Row,
+  Col,
 } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -46,6 +48,12 @@ const CATEGORY_VARIANT: Record<number, string> = {
 function AdminPostsPage() {
   const { t } = useTranslation()
 
+  // 1. Giữ các State lưu bộ lọc bình thường
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [fromDate, setFromDate] = useState<string>('')
+  const [toDate, setToDate] = useState<string>('')
+
+  // 2. Trả hook useGetPostList() về nguyên bản không truyền tham số
   const { data, isLoading, isError } = useGetPostList()
   const [isExporting, setIsExporting] = useState(false)
 
@@ -59,6 +67,7 @@ function AdminPostsPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [rejectReasonError, setRejectReasonError] = useState(false)
 
+  // 3. Trả hàm export về nguyên bản không truyền tham số
   const handleExportPdf = async () => {
     setIsExporting(true)
     try {
@@ -68,7 +77,35 @@ function AdminPostsPage() {
     }
   }
 
-  const posts = data?.data ?? []
+  const handleClearFilters = () => {
+    setCategoryId('')
+    setFromDate('')
+    setToDate('')
+  }
+
+  const rawPosts = data?.data ?? []
+
+  // 4. THỰC HIỆN LOGIC LỌC THÔNG MINH TRÊN FRONT-END:
+  const posts = rawPosts.filter((p) => {
+    // Lọc theo chủ đề (Category)
+    if (categoryId && String(p.category?.id) !== categoryId) {
+      return false
+    }
+
+    // Lọc theo thời gian: Từ ngày (created_at >= fromDate)
+    if (fromDate && p.created_at) {
+      const postDate = p.created_at.split('T')[0] // Lấy định dạng Y-m-d từ chuỗi ISO
+      if (postDate < fromDate) return false
+    }
+
+    // Lọc theo thời gian: Đến ngày (created_at <= toDate)
+    if (toDate && p.created_at) {
+      const postDate = p.created_at.split('T')[0]
+      if (postDate > toDate) return false
+    }
+
+    return true
+  })
 
   const { mutate: validatePost, isPending: isValidating } = useValidatePost()
 
@@ -118,7 +155,7 @@ function AdminPostsPage() {
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <h4 className="fw-bold mb-1">{t('admin_posts_title')}</h4>
-            <p className="text-secondary mb-4">{t('admin_posts_subtitle')}</p>
+            <p className="text-secondary mb-0">{t('admin_posts_subtitle')}</p>
           </div>
           <Button
             variant="outline-danger"
@@ -131,6 +168,71 @@ function AdminPostsPage() {
           </Button>
         </div>
       </div>
+
+      {/* THANH BỘ LỌC (FILTERS BAR) */}
+      <Card className="border-0 shadow-sm rounded-4 mb-4 bg-body-tertiary">
+        <Card.Body className="p-3">
+          <Row className="g-3 align-items-end">
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-semibold text-secondary d-flex align-items-center gap-1">
+                  <Filter size={14} /> Chọn chủ đề
+                </Form.Label>
+                <Form.Select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="rounded-3"
+                >
+                  <option value="">Tất cả chủ đề</option>
+                  {Object.entries(CATEGORY_NAME).map(([id, name]) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small fw-semibold text-secondary">Từ ngày</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="rounded-3"
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small fw-semibold text-secondary">Đến ngày</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="rounded-3"
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={2} className="d-grid">
+              {(categoryId || fromDate || toDate) ? (
+                <Button 
+                  variant="link" 
+                  className="text-danger text-decoration-none text-center p-2 small"
+                  onClick={handleClearFilters}
+                >
+                  Xóa bộ lọc
+                </Button>
+              ) : (
+                <div style={{ height: '38px' }}></div>
+              )}
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
       <Card className="border-0 shadow-sm rounded-4">
         <Card.Body className="p-0">
@@ -163,7 +265,7 @@ function AdminPostsPage() {
                     </td>
                   </tr>
                 ) : (
-                  posts?.map((p, index) => (
+                  posts?.map((p) => (
                     <tr key={p.id}>
                       <td className="px-4">{p.id}</td>
                       <td>{p.author?.full_name ?? p.author?.email ?? '—'}</td>
