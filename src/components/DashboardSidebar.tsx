@@ -3,7 +3,6 @@ import {
   Home,
   Users,
   MessageCircle,
-  Bell,
   User,
   Settings,
   Bookmark,
@@ -15,12 +14,12 @@ import { useStore } from '@tanstack/react-store'
 import { authStore, clearAuth } from '#/lib/auth'
 import { useEffect, useState } from 'react'
 import { Image } from 'react-bootstrap'
+import UserAvatar from './UserAvatar'
 
 const NAV_ITEMS = [
   { key: 'nav_home', icon: Home, to: '/dashboard' },
   { key: 'nav_profile', icon: User, to: '/profile' },
   { key: 'nav_messages', icon: MessageCircle, to: '/messages' },
-  { key: 'nav_notifications', icon: Bell, to: '/notifications' },
 ] as const
 
 interface DashboardSidebarProps {
@@ -51,7 +50,6 @@ export default function DashboardSidebar({
   const labels: Record<string, string> = {
     nav_home: t('nav_home'),
     nav_messages: t('nav_messages'),
-    nav_notifications: t('nav_notifications'),
     nav_profile: t('nav_profile'),
   }
 
@@ -103,14 +101,7 @@ export default function DashboardSidebar({
       <div className="d-flex flex-column gap-3 mt-4">
         {/* User card — luôn render để tránh hydration mismatch */}
         <div className="d-flex align-items-center gap-3 rounded bg-body-tertiary p-2 border">
-          <div
-            className="rounded-circle d-flex align-items-center justify-content-center bg-body-secondary flex-shrink-0"
-            style={{ width: '40px', height: '40px' }}
-          >
-            <span className="text-secondary small">
-              {mounted ? (user?.email?.charAt(0).toUpperCase() ?? '?') : ''}
-            </span>
-          </div>
+          <UserAvatar fullName={mounted ? (user?.full_name ?? '') : ''} />
           <div className="text-truncate flex-grow-1">
             <p className="mb-0 fw-bold fs-6 text-truncate">
               {mounted ? (user?.full_name ?? '') : ''}

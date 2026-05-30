@@ -1,8 +1,9 @@
-import { Button, Image } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
 import { UserPlus, TrendingUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTrendingCategories } from '#/api/useCategory'
 import { useSuggestedFollows } from '#/api/useSuggestedFollows'
+import UserAvatar from './UserAvatar'
 
 export default function RightSidebar() {
   const { t } = useTranslation()
@@ -55,14 +56,7 @@ export default function RightSidebar() {
 
               return (
                 <div key={user.id} className="d-flex align-items-center gap-2">
-                  <Image
-                    src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=random`}
-                    alt={user.full_name}
-                    roundedCircle
-                    width={40}
-                    height={40}
-                    className="object-fit-cover border"
-                  />
+                  <UserAvatar fullName={user.full_name} avatar={user.avatar} />
                   <div className="flex-grow-1 text-truncate">
                     <p className="mb-0 fw-semibold text-truncate small" title={user.full_name}>
                       {user.full_name}
