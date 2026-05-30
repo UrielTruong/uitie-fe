@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createPost, deletePost, fetchFeed, searchPost, updatePost } from './postApi'
+import { createPost, deletePost, fetchFeed, searchPost, updatePost, toggleLike, sharePost } from './postApi'
 import type { CreatePostPayload, Post, UpdatePostPayload } from '#/types/post'
 
 export const useFeedPosts = () => {
@@ -21,6 +21,23 @@ export const useCreatePost = () => {
   return useMutation({
     mutationFn: (payload: CreatePostPayload) => createPost(payload),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['post', 'feed'] })
+    },
+  })
+}
+
+export const useToggleLike = () => {
+  return useMutation({
+    mutationFn: (id: number) => toggleLike(id),
+  })
+}
+
+export const useSharePost = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, content }: { id: number; content?: string }) => sharePost(id, content),
+    onSuccess: () => {
+      // Cập nhật lại Feed để hiển thị bài Share mới ngay lập tức
       queryClient.invalidateQueries({ queryKey: ['post', 'feed'] })
     },
   })

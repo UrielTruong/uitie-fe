@@ -31,7 +31,7 @@ import { presignAttachments, uploadToMinIO } from '#/api/attachmentApi'
 import { Button, Card, Dropdown, Form, Modal } from 'react-bootstrap'
 import UserAvatar from './UserAvatar'
 import { authStore } from '#/lib/auth'
-import { useDeletePost, useUpdatePost } from '#/api/usePost'
+import { useDeletePost, useUpdatePost, useToggleLike, useSharePost } from '#/api/usePost'
 import toast from 'react-hot-toast'
 import { CATEGORIES } from '#/types/category'
 import CommentSection from './CommentSection'
@@ -105,20 +105,39 @@ interface FeedPostCardProps {
 }
 
 export default function FeedPostCard({ post }: FeedPostCardProps) {
-  const [liked, setLiked] = useState(post.liked)
-  const [likeCount, setLikeCount] = useState(post.likes)
+  const user = useStore(authStore, (s) => s.user)
+
+  const initialLikeCount = Array.isArray(post.likes)
+    ? post.likes.length
+    : Number(post.likes) || 0
+
+  const initialLiked = Array.isArray(post.likes)
+    ? post.likes.some((l: any) => l.user_id === user?.id)
+    : Boolean(post.liked)
+
+  const [liked, setLiked] = useState(initialLiked)
+  const [likeCount, setLikeCount] = useState(initialLikeCount)
+  const [shareCount, setShareCount] = useState(Number(post.shares) || 0)
   const [bookmarked, setBookmarked] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [showComments, setShowComments] = useState(false)
-  const [commentCount, setCommentCount] = useState(post.comments || 0)
 
+  const initialCommentCount = Array.isArray(post.comments) ? post.comments.length : Number(post.comments) || Number((post as any).comments_count) || 0
+  const [commentCount, setCommentCount] = useState(initialCommentCount)
   const currentUser = useStore(authStore, (s) => s.user)
-  const user = useStore(authStore, (s) => s.user)
+  const sharedPost = (post as any).parent_post || (post as any).parentPost || (post as any).shared_post || (post as any).original_post
+
+  const sharedAuthor = sharedPost?.author || sharedPost?.user || {}
+  const sharedAuthorName = sharedAuthor?.full_name || 'Người dùng ẩn danh'
+
   const { mutate: mutateUpdatePost, isPending: isUpdating } = useUpdatePost()
   const { mutate: mutateDeletePost, isPending: isDeleting } = useDeletePost()
+  const { mutate: mutateToggleLike, isPending: isLiking } = useToggleLike()
+  const { mutate: mutateSharePost, isPending: isSharing } = useSharePost()
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // edit form state
   const [editContent, setEditContent] = useState('')
@@ -130,6 +149,7 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
   const editFileInputRef = useRef<HTMLInputElement>(null)
+  const [shareContent, setShareContent] = useState('')
 
   useEffect(() => {
     if (showEditModal) {
@@ -178,6 +198,35 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
       setNewFiles((prev) => [...prev, ...valid])
     }
     if (editFileInputRef.current) editFileInputRef.current.value = ''
+  }
+
+  function handleLike() {
+    if (isLiking) return
+    const previousLiked = liked
+    const previousCount = likeCount
+    setLiked(!previousLiked)
+    setLikeCount((prev) => (previousLiked ? prev - 1 : prev + 1))
+
+    mutateToggleLike(post.id, {
+      onError: () => {
+        setLiked(previousLiked)
+        setLikeCount(previousCount)
+        toast.error('Lỗi khi thực hiện thao tác thích bài viết.')
+      },
+    })
+  }
+
+  function handleShare() {
+    if (isSharing) return
+    mutateSharePost({ id: post.id, content: shareContent }, {
+      onSuccess: (res) => {
+        setShareCount(res?.data?.shares ?? shareCount + 1)
+        setShareContent('')
+        toast.success('Đã chia sẻ bài viết thành công!')
+        setShowShareModal(false)
+      },
+      onError: () => toast.error('Lỗi khi chia sẻ bài viết.'),
+    })
   }
 
   function removeExistingAttachment(id: number) {
@@ -299,7 +348,14 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
               <Link to="/profile" search={
                 currentUser?.id === post.author.id ? {} : { user: String(post.author.id) }
               } className="text-decoration-none text-body">
-                <h6 className="mb-0 fw-bold">{post.author.full_name}</h6>
+                <h6 className="mb-0 fw-bold">
+                {post.author.full_name}
+                {sharedPost && (
+                  <span className="fw-normal text-muted ms-1" style={{ fontSize: '0.9em' }}>
+                    đã chia sẻ một bài viết
+                  </span>
+                )}
+              </h6>
               </Link>
               <div className="d-flex align-items-center gap-1 text-muted small">
                 {post.visibility === 'Private' ? (
@@ -363,9 +419,11 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
         </div>
 
         {/* Content */}
-        <Card.Text className="mb-4" style={{ whiteSpace: 'pre-line' }}>
-          {post.content}
-        </Card.Text>
+        {post.content && (
+          <Card.Text className="mb-4" style={{ whiteSpace: 'pre-line' }}>
+            {post.content}
+          </Card.Text>
+        )}
 
         {/* Attachments */}
         {post.attachments && post.attachments.length > 0 && (
@@ -417,10 +475,82 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           </div>
         )}
 
+        {/* Shared Post Container */}
+        {sharedPost && (
+          <div className="border rounded-4 mb-3 overflow-hidden bg-light">
+            {/* Original Author */}
+            <div className="d-flex align-items-center gap-2 p-3 pb-2 border-bottom bg-white">
+              <div style={{ transform: 'scale(0.85)', transformOrigin: 'center left' }}>
+                <UserAvatar fullName={sharedAuthorName} />
+              </div>
+              <div>
+                <h6 className="mb-0 fw-bold small text-dark">{sharedAuthorName}</h6>
+                <div className="d-flex align-items-center gap-1 text-muted" style={{ fontSize: '0.75rem' }}>
+                  {sharedPost.visibility === 'Private' ? (
+                    <Lock size={10} />
+                  ) : (
+                    <Globe size={10} />
+                  )}
+                  <span>{timeAgo(sharedPost.updated_at || sharedPost.created_at || new Date().toISOString())}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Original Content */}
+            {sharedPost.content && (
+              <div className="px-3 pt-2 pb-1 bg-white">
+                <Card.Text className="mb-2 small text-dark" style={{ whiteSpace: 'pre-line' }}>
+                  {sharedPost.content}
+                </Card.Text>
+              </div>
+            )}
+
+            {/* Original Attachments */}
+            {sharedPost.attachments && sharedPost.attachments.length > 0 && (
+              <div className="d-flex flex-wrap gap-2 bg-white pb-3 px-3">
+                {sharedPost.attachments.map((att: Attachment) => {
+                  if (att.file_type === 'Image') {
+                    return (
+                      <img
+                        key={att.id}
+                        src={att.view_url}
+                        alt={att.file_name ?? 'image'}
+                        className="rounded-3 border"
+                        style={{ maxWidth: '100%', maxHeight: 250, objectFit: 'cover' }}
+                      />
+                    )
+                  }
+                  if (att.file_type === 'Video') {
+                    return (
+                      <video key={att.id} src={att.view_url} controls className="rounded-3 w-100 border" style={{ maxHeight: 250 }} />
+                    )
+                  }
+                  return (
+                    <div key={att.id} className="d-flex align-items-end w-100 mt-1">
+                      <a
+                        href={att.view_url}
+                        download={att.file_name ?? true}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="d-flex align-items-center gap-2 text-decoration-none border rounded-3 px-3 py-2 text-secondary bg-body-tertiary w-100"
+                      >
+                        <Paperclip size={16} />
+                        <span className="small text-truncate fw-medium">{att.file_name ?? 'Download file'}</span>
+                      </a>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="d-flex align-items-center gap-2 pt-3 border-top">
           <Button
             variant="link"
+            onClick={handleLike}
+            disabled={isLiking}
             className={`d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 ${
               liked ? 'text-danger bg-danger bg-opacity-10' : 'text-secondary'
             }`}
@@ -443,10 +573,12 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
 
           <Button
             variant="link"
+            onClick={() => setShowShareModal(true)}
+            disabled={isSharing}
             className="d-flex align-items-center gap-2 text-decoration-none p-2 rounded-3 text-secondary"
           >
             <Share2 size={18} />
-            <span className="small fw-medium">{post.shares}</span>
+            <span className="small fw-medium">{shareCount}</span>
           </Button>
 
           <Button
@@ -740,6 +872,54 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
             disabled={isDeleting}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ── Share modal ───────────────────────────────────────────────────────── */}
+      <Modal
+        show={showShareModal}
+        onHide={() => setShowShareModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận chia sẻ</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Nói gì đó về bài viết này..."
+            value={shareContent}
+            onChange={(e) => setShareContent(e.target.value)}
+            style={{ resize: 'none' }}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowShareModal(false)}
+            disabled={isSharing}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleShare}
+            disabled={isSharing}
+          >
+            {isSharing ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-1"
+                  role="status"
+                  aria-hidden="true"
+                />
+                Đang chia sẻ...
+              </>
+            ) : (
+              'Chia sẻ'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
