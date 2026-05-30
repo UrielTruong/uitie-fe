@@ -9,4 +9,11 @@ export interface Comment {
   updated_at: string
   user: User
   replies?: Comment[]
+  attachments?: {
+    id: number;
+    file_name: string;
+    file_type: string;
+    view_url: string;
+    created_at: string;
+  }[];
 }
