@@ -33,11 +33,13 @@ export const useCreateReport = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: { post_id: number; reason: string }) => 
-      createReport(payload),
+    // Nhận object từ Form giao diện truyền vào
+    mutationFn: ({ post_id, reason }: { post_id: number | string; reason: string }) => 
+      createReport(post_id, { reason }), // Rã bọc: truyền post_id làm URL, reason làm body
     onSuccess: () => {
-      // Làm mới danh sách báo cáo nếu admin đang xem
+      // Làm mới danh sách báo cáo bên Admin và danh sách bài viết ngoài Feed sinh viên
       queryClient.invalidateQueries({ queryKey: ['report', 'list'] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
       toast.success('Gửi báo cáo vi phạm thành công!')
     },
     onError: (error: any) => {

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { UserRole } from '#/lib/fake-api'
 import { useProfile, useUpdateProfile, useUserPosts } from '#/api/useProfile'
+import ReportModal from '../../components/ReportModal'
 import toast from 'react-hot-toast'
 import FeedPostCard from '#/components/FeedPostCard'
 
@@ -72,6 +73,9 @@ function ProfilePage() {
     class_name: '',
     academic_year: '',
   })
+
+  // 🚩 CODE CẬP NHẬT: Khai báo State điều khiển đóng/mở Modal báo cáo tài khoản
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
   // Đưa dữ liệu hiện tại vào form khi mở modal
   const handleOpenEdit = () => {
@@ -212,6 +216,24 @@ function ProfilePage() {
                   >
                     <MessageSquare size={16} /> Nhắn tin
                   </Button>
+
+                  {/* 🚩 CODE CẬP NHẬT: Thêm nút bấm Báo cáo tài khoản cho Profile người khác */}
+                  <Button
+                    variant="outline-danger"
+                    className="d-flex align-items-center gap-2"
+                    onClick={() => setIsReportModalOpen(true)}
+                  >
+                    🚩 Báo cáo
+                  </Button>
+
+                  {/* 🚩 CODE CẬP NHẬT: Nhúng Modal báo cáo chạy ngầm và truyền userId qua */}
+                  {isReportModalOpen && (
+                    <ReportModal
+                      isOpen={isReportModalOpen}
+                      onClose={() => setIsReportModalOpen(false)}
+                      userId={profileData?.id}
+                    />
+                  )}
                 </>
               )}
             </div>
