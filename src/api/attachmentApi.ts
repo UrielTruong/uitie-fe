@@ -11,6 +11,7 @@ export interface PresignResult {
 }
 export const presignAttachments = async (
   files: File[],
+  folder: 'posts' | 'messages' = 'posts',
 ): Promise<PresignResult[]> => {
   const files_meta: FileMeta[] = files.map((f) => ({
     name: f.name,
@@ -18,7 +19,7 @@ export const presignAttachments = async (
   }))
   const res = await axiosClient.post<{ status: boolean; data: PresignResult[] }>(
     '/attachment/presign',
-    { files_meta },
+    { files_meta, folder },
   )
   return res.data.data
 }

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-store'
 import { authStore, clearAuth } from '#/lib/auth'
 import { useEffect, useState } from 'react'
+import UserAvatar from '../UserAvatar'
 
 import type { UserRole } from '#/types/user'
 
@@ -117,14 +118,7 @@ export default function AdminSidebar({
 
       <div className="d-flex flex-column gap-3 mt-4">
         <div className="d-flex align-items-center gap-3 rounded bg-body-tertiary p-2 border">
-          <div
-            className="rounded-circle d-flex align-items-center justify-content-center bg-danger bg-opacity-25 flex-shrink-0"
-            style={{ width: '40px', height: '40px' }}
-          >
-            <span className="text-danger small fw-bold">
-              {mounted ? (user?.email?.charAt(0).toUpperCase() ?? '?') : ''}
-            </span>
-          </div>
+          <UserAvatar fullName={mounted ? (user?.full_name ?? '') : ''} />
           <div className="text-truncate flex-grow-1">
             <p className="mb-0 fw-bold fs-6 text-truncate">
               {mounted ? (user?.full_name ?? '') : ''}
