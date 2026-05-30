@@ -1,6 +1,7 @@
 import { useJoinGroup, useRejectGroup } from '#/integrations/useChat'
 import { Users } from 'lucide-react'
 import { Button, Spinner } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   groupId: number
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function GroupJoinPrompt({ groupId, groupName }: Props) {
+  const { t } = useTranslation()
   const join = useJoinGroup()
   const reject = useRejectGroup()
 
@@ -18,7 +20,7 @@ export default function GroupJoinPrompt({ groupId, groupName }: Props) {
       </div>
       <h5 className="fw-bold">{groupName}</h5>
       <p className="text-secondary mb-4">
-        You've been invited to this group. Join to see messages and participate.
+        {t('chat_join_invite_desc')}
       </p>
       <div className="d-flex gap-2">
         <Button
@@ -27,7 +29,7 @@ export default function GroupJoinPrompt({ groupId, groupName }: Props) {
           disabled={join.isPending || reject.isPending}
           onClick={() => join.mutate(groupId)}
         >
-          {join.isPending ? <Spinner animation="border" size="sm" /> : 'Join Group'}
+          {join.isPending ? <Spinner animation="border" size="sm" /> : t('chat_join_group')}
         </Button>
         <Button
           variant="outline-secondary"
@@ -35,7 +37,7 @@ export default function GroupJoinPrompt({ groupId, groupName }: Props) {
           disabled={join.isPending || reject.isPending}
           onClick={() => reject.mutate(groupId)}
         >
-          {reject.isPending ? <Spinner animation="border" size="sm" /> : 'Decline'}
+          {reject.isPending ? <Spinner animation="border" size="sm" /> : t('chat_decline')}
         </Button>
       </div>
     </div>

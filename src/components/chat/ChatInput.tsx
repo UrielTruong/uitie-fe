@@ -4,6 +4,7 @@ import { Paperclip, Send, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Button, Form, InputGroup, Spinner } from 'react-bootstrap'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   onSend: (payload: {
@@ -17,6 +18,7 @@ const ACCEPTED_TYPES =
   'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 export default function ChatInput({ onSend, isPending }: Props) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState('')
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
@@ -46,7 +48,7 @@ export default function ChatInput({ onSend, isPending }: Props) {
       setPendingFiles([])
     } catch {
       setUploading(false)
-      toast.error('Failed to upload attachment.')
+      toast.error(t('chat_upload_failed'))
     }
   }
 
@@ -102,7 +104,7 @@ export default function ChatInput({ onSend, isPending }: Props) {
         </Button>
 
         <Form.Control
-          placeholder="Type a message…"
+          placeholder={t('chat_type_message')}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

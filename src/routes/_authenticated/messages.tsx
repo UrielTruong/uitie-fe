@@ -6,6 +6,7 @@ import type { ActiveConversation } from '#/types/chat'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Card } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import axiosClient from '#/api/axiosClient'
 import { z } from 'zod'
@@ -33,6 +34,7 @@ function useDmUserName(userId: number | null, knownName: string | null) {
 }
 
 function MessagesPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate({ from: '/messages' })
   const search = Route.useSearch()
   const { data: conversations } = useDmConversations()
@@ -93,7 +95,7 @@ function MessagesPage() {
           <section className="d-flex flex-column flex-grow-1 min-w-0">
             {!active && (
               <div className="d-flex flex-column align-items-center justify-content-center h-100 text-secondary">
-                <p className="mb-0">Select a conversation or start a new one</p>
+                <p className="mb-0">{t('chat_select_conversation')}</p>
               </div>
             )}
 

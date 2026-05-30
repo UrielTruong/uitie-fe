@@ -11,6 +11,7 @@ import type { ChatMessage } from '#/types/chat'
 import { Info } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { Button, Spinner } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import ChatInput from './ChatInput'
 import GroupJoinPrompt from './GroupJoinPrompt'
@@ -26,6 +27,7 @@ interface DmAreaProps {
 }
 
 export function DmMessageArea({ userId, userName, onInfo }: DmAreaProps) {
+  const { t } = useTranslation()
   const user = useStore(authStore, (s) => s.user)
   const { data, isLoading } = useDmMessages(userId)
   const send = useSendDmMessage(userId)
@@ -75,7 +77,7 @@ export function DmMessageArea({ userId, userName, onInfo }: DmAreaProps) {
             <Spinner animation="border" variant="primary" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-secondary py-5">Start a conversation with {userName}</div>
+          <div className="text-center text-secondary py-5">{t('chat_dm_empty', { name: userName })}</div>
         ) : (
           messages.map((msg, i) => {
             const isOwn = msg.sender.id === Number(user?.id)
@@ -104,6 +106,7 @@ interface GroupAreaProps {
 }
 
 export function GroupMessageArea({ groupId, groupName, myStatus, onInfo }: GroupAreaProps) {
+  const { t } = useTranslation()
   const user = useStore(authStore, (s) => s.user)
   const { data, isLoading } = useGroupMessages(myStatus === 'Accepted' ? groupId : null)
   const send = useSendGroupMessage(groupId)
@@ -157,7 +160,7 @@ export function GroupMessageArea({ groupId, groupName, myStatus, onInfo }: Group
             <Spinner animation="border" variant="primary" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-secondary py-5">No messages yet. Say hello!</div>
+          <div className="text-center text-secondary py-5">{t('chat_group_empty')}</div>
         ) : (
           messages.map((msg, i) => {
             const isOwn = msg.sender.id === Number(user?.id)

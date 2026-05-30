@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import FeedPostCard from '#/components/FeedPostCard'
 import Spinner from 'react-bootstrap/Spinner'
-import { Nav } from 'react-bootstrap' // 🚩 Thèn thêm Nav từ Bootstrap để làm Tab
+import { Nav } from 'react-bootstrap'
 import CreatePostForm from '#/components/CreatePostForm'
 import { useFeedPosts } from '#/api/usePost'
-import { useState } from 'react' // 🚩 Thêm useState để quản lý Tab đang chọn
+import { useState } from 'react'
+import { Globe, Users } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/dashboard/')({
   component: DashboardPage,
@@ -36,10 +37,10 @@ function DashboardPage() {
         className="mb-4 mt-3 fw-semibold border-bottom"
       >
         <Nav.Item>
-          <Nav.Link eventKey="all" className="px-3 pb-2">🌐 Khám phá</Nav.Link>
+          <Nav.Link eventKey="all" className="px-3 pb-2 d-flex align-items-center gap-2"><Globe size={16} /> Khám phá</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="following" className="px-3 pb-2">👥 Đang theo dõi</Nav.Link>
+          <Nav.Link eventKey="following" className="px-3 pb-2 d-flex align-items-center gap-2"><Users size={16} /> Đang theo dõi</Nav.Link>
         </Nav.Item>
       </Nav>
 

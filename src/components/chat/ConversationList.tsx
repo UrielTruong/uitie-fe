@@ -3,6 +3,7 @@ import type { ActiveConversation, DmConversation, GroupChat } from '#/types/chat
 import { MessageSquare, Plus, Search, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Badge, Button, Form, InputGroup, Spinner } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import CreateGroupModal from './CreateGroupModal'
 import NewDmModal from './NewDmModal'
 import UserAvatar from '../UserAvatar'
@@ -33,6 +34,7 @@ function sortKey(lastMsg: { created_at: string } | null, fallback?: string): num
 }
 
 export default function ConversationList({ active, onSelect }: Props) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [showNewDm, setShowNewDm] = useState(false)
@@ -57,7 +59,7 @@ export default function ConversationList({ active, onSelect }: Props) {
       {/* Header */}
       <div className="p-3 border-bottom">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="fw-bold mb-0">Chats</h5>
+          <h5 className="fw-bold mb-0">{t('chat_header')}</h5>
           <div className="position-relative">
             <Button
               size="sm"
@@ -65,7 +67,7 @@ export default function ConversationList({ active, onSelect }: Props) {
               className="border d-flex align-items-center justify-content-center"
               style={{ width: 32, height: 32 }}
               onClick={() => setShowPicker((p) => !p)}
-              title="New chat"
+              title={t('chat_new_chat')}
             >
               <Plus size={16} />
             </Button>
@@ -90,7 +92,7 @@ export default function ConversationList({ active, onSelect }: Props) {
                     }}
                   >
                     <MessageSquare size={14} />
-                    <span className="small">New DM</span>
+                    <span className="small">{t('chat_new_dm')}</span>
                   </button>
                   <button
                     type="button"
@@ -101,7 +103,7 @@ export default function ConversationList({ active, onSelect }: Props) {
                     }}
                   >
                     <Users size={14} />
-                    <span className="small">New Group</span>
+                    <span className="small">{t('chat_new_group')}</span>
                   </button>
                 </div>
               </>
@@ -114,7 +116,7 @@ export default function ConversationList({ active, onSelect }: Props) {
             <Search size={12} />
           </InputGroup.Text>
           <Form.Control
-            placeholder="Search…"
+            placeholder={t('chat_search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="bg-body-secondary border-0"
@@ -129,7 +131,7 @@ export default function ConversationList({ active, onSelect }: Props) {
             <Spinner animation="border" size="sm" variant="secondary" />
           </div>
         ) : unified.length === 0 ? (
-          <div className="text-center text-secondary small py-4">No conversations yet</div>
+          <div className="text-center text-secondary small py-4">{t('chat_no_conversations')}</div>
         ) : (
           unified.map((item) => {
             if (item.kind === 'dm') {
@@ -154,7 +156,7 @@ export default function ConversationList({ active, onSelect }: Props) {
                       )}
                     </div>
                     <div className="small text-secondary text-truncate">
-                      {c.last_message?.content ?? 'Attachment'}
+                      {c.last_message?.content ?? t('chat_attachment')}
                     </div>
                   </div>
                 </button>
@@ -183,13 +185,13 @@ export default function ConversationList({ active, onSelect }: Props) {
                     <div className="d-flex align-items-center gap-1 min-w-0 overflow-hidden">
                       <span className="fw-semibold text-truncate">{g.group_name}</span>
                       <Badge bg="secondary" pill style={{ fontSize: 9, padding: '2px 5px', flexShrink: 0 }}>
-                        Group
+                        {t('chat_group_badge')}
                       </Badge>
                     </div>
                     <div className="d-flex align-items-center gap-1 flex-shrink-0 ms-2">
                       {isPending && (
                         <Badge bg="warning" text="dark" pill style={{ fontSize: 10 }}>
-                          Invited
+                          {t('chat_invited_badge')}
                         </Badge>
                       )}
                       {g.last_message && (
@@ -199,10 +201,10 @@ export default function ConversationList({ active, onSelect }: Props) {
                   </div>
                   <div className="small text-secondary text-truncate">
                     {isPending
-                      ? 'You have been invited'
+                      ? t('chat_invited_status')
                       : g.last_message
-                        ? `${g.last_message.sender?.full_name ?? 'Someone'}: ${g.last_message.content ?? 'Attachment'}`
-                        : `${g.member_count} members`}
+                        ? `${g.last_message.sender?.full_name ?? t('chat_someone')}: ${g.last_message.content ?? t('chat_attachment')}`
+                        : t('chat_group_member_count', { count: g.member_count })}
                   </div>
                 </div>
               </button>

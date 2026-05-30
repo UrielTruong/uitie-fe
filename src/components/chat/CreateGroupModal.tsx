@@ -1,8 +1,10 @@
 import { useCreateGroup } from '#/integrations/useChat'
 import { Search, X } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button, Form, InputGroup, ListGroup, Modal, Spinner } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import axiosClient from '#/api/axiosClient'
+import UserAvatar from '../UserAvatar'
 
 interface Props {
   show: boolean
@@ -17,34 +19,41 @@ interface UserSearchResult {
 }
 
 export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
+  const { t } = useTranslation()
   const createGroup = useCreateGroup()
   const [groupName, setGroupName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>([])
   const [searching, setSearching] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  async function handleSearch(q: string) {
+  function handleSearch(q: string) {
     setSearchQuery(q)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     if (q.trim().length < 2) {
       setSearchResults([])
       return
     }
-    setSearching(true)
-    try {
-      const res = await axiosClient.get('/user/search', { params: { keyword: q } })
-      setSearchResults(res.data.data ?? [])
-    } finally {
-      setSearching(false)
-    }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await axiosClient.get('/user/search', { params: { keyword: q } })
+        setSearchResults(res.data.data ?? [])
+      } finally {
+        setSearching(false)
+      }
+    }, 500)
   }
 
-  function toggleMember(user: UserSearchResult) {
-    setSelectedMembers((prev) =>
-      prev.some((m) => m.id === user.id)
-        ? prev.filter((m) => m.id !== user.id)
-        : [...prev, user],
-    )
+  function addMember(user: UserSearchResult) {
+    setSelectedMembers((prev) => (prev.some((m) => m.id === user.id) ? prev : [...prev, user]))
+    setSearchQuery('')
+    setSearchResults([])
+  }
+
+  function removeMember(userId: number) {
+    setSelectedMembers((prev) => prev.filter((m) => m.id !== userId))
   }
 
   function handleClose() {
@@ -77,15 +86,15 @@ export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title className="fs-6">Create Group Chat</Modal.Title>
+        <Modal.Title className="fs-6">{t('chat_create_group_title')}</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body className="d-flex flex-column gap-3">
           <Form.Group>
-            <Form.Label className="small fw-semibold">Group name</Form.Label>
+            <Form.Label className="small fw-semibold">{t('chat_group_name_label')}</Form.Label>
             <Form.Control
               size="sm"
-              placeholder="e.g. Study Group"
+              placeholder={t('chat_group_name_placeholder')}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               required
@@ -94,19 +103,19 @@ export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
           </Form.Group>
 
           <Form.Group>
-            <Form.Label className="small fw-semibold">Invite members (optional)</Form.Label>
+            <Form.Label className="small fw-semibold">{t('chat_invite_members_label')}</Form.Label>
             <InputGroup size="sm">
               <InputGroup.Text>
                 <Search size={12} />
               </InputGroup.Text>
               <Form.Control
-                placeholder="Search users…"
+                placeholder={t('chat_search_users_placeholder')}
                 value={searchQuery}
-                onChange={(e) => void handleSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
               />
             </InputGroup>
 
-            {searching && <div className="small text-secondary mt-1">Searching…</div>}
+            {searching && <div className="small text-secondary mt-1">{t('chat_searching')}</div>}
 
             {searchResults.length > 0 && (
               <ListGroup className="mt-1 border rounded" style={{ maxHeight: 140, overflowY: 'auto' }}>
@@ -114,15 +123,18 @@ export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
                   <ListGroup.Item
                     key={u.id}
                     action
-                    active={selectedIds.has(u.id)}
+                    disabled={selectedIds.has(u.id)}
                     className="d-flex justify-content-between align-items-center py-1 px-2 cursor-pointer"
-                    onClick={() => toggleMember(u)}
+                    onClick={() => addMember(u)}
                   >
-                    <div>
-                      <div className="small fw-semibold">{u.full_name}</div>
-                      <div style={{ fontSize: 11 }}>{u.email}</div>
+                    <div className="d-flex align-items-center gap-2">
+                      <UserAvatar fullName={u.full_name} size={28} />
+                      <div>
+                        <div className="small fw-semibold">{u.full_name}</div>
+                        <div style={{ fontSize: 11 }}>{u.email}</div>
+                      </div>
                     </div>
-                    {selectedIds.has(u.id) && <span className="small">✓</span>}
+                    {selectedIds.has(u.id) && <span className="small text-success">✓</span>}
                   </ListGroup.Item>
                 ))}
               </ListGroup>
@@ -140,7 +152,7 @@ export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
                     <button
                       type="button"
                       className="btn btn-sm p-0 border-0 text-white"
-                      onClick={() => toggleMember(m)}
+                      onClick={() => removeMember(m.id)}
                     >
                       <X size={10} />
                     </button>
@@ -153,7 +165,7 @@ export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
 
         <Modal.Footer>
           <Button size="sm" variant="secondary" onClick={handleClose}>
-            Cancel
+            {t('chat_cancel')}
           </Button>
           <Button
             size="sm"
@@ -161,7 +173,7 @@ export default function CreateGroupModal({ show, onHide, onCreated }: Props) {
             type="submit"
             disabled={!groupName.trim() || createGroup.isPending}
           >
-            {createGroup.isPending ? <Spinner animation="border" size="sm" /> : 'Create'}
+            {createGroup.isPending ? <Spinner animation="border" size="sm" /> : t('chat_create')}
           </Button>
         </Modal.Footer>
       </Form>

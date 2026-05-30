@@ -1,8 +1,9 @@
 import axiosClient from '#/api/axiosClient'
 import type { ActiveConversation } from '#/types/chat'
 import { Search } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Form, InputGroup, Modal } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import UserAvatar from '../UserAvatar'
 
 interface Props {
@@ -18,23 +19,28 @@ interface UserSearchResult {
 }
 
 export default function NewDmModal({ show, onHide, onSelect }: Props) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<UserSearchResult[]>([])
   const [searching, setSearching] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  async function handleSearch(q: string) {
+  function handleSearch(q: string) {
     setQuery(q)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     if (q.trim().length < 2) {
       setResults([])
       return
     }
-    setSearching(true)
-    try {
-      const res = await axiosClient.get('/user/search', { params: { keyword: q } })
-      setResults(res.data.data ?? [])
-    } finally {
-      setSearching(false)
-    }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await axiosClient.get('/user/search', { params: { keyword: q } })
+        setResults(res.data.data ?? [])
+      } finally {
+        setSearching(false)
+      }
+    }, 500)
   }
 
   function handleClose() {
@@ -46,7 +52,7 @@ export default function NewDmModal({ show, onHide, onSelect }: Props) {
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title className="fs-6">New Message</Modal.Title>
+        <Modal.Title className="fs-6">{t('chat_new_message_title')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className="d-flex flex-column gap-3">
         <InputGroup size="sm">
@@ -54,17 +60,17 @@ export default function NewDmModal({ show, onHide, onSelect }: Props) {
             <Search size={12} />
           </InputGroup.Text>
           <Form.Control
-            placeholder="Search by name or email…"
+            placeholder={t('chat_search_name_email')}
             value={query}
-            onChange={(e) => void handleSearch(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             autoFocus
           />
         </InputGroup>
 
-        {searching && <div className="small text-secondary">Searching…</div>}
+        {searching && <div className="small text-secondary">{t('chat_searching')}</div>}
 
         {!searching && query.trim().length >= 2 && results.length === 0 && (
-          <div className="small text-secondary text-center py-2">No users found</div>
+          <div className="small text-secondary text-center py-2">{t('chat_no_users_found')}</div>
         )}
 
         {results.length > 0 && (
