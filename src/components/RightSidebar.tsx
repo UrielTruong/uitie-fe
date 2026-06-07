@@ -1,14 +1,28 @@
-import { Button } from 'react-bootstrap'
-import { UserPlus, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import { Button, Spinner } from 'react-bootstrap'
+import { UserPlus, TrendingUp, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTrendingCategories } from '#/api/useCategory'
 import { useSuggestedFollows } from '#/api/useSuggestedFollows'
+import { useFollowUser } from '#/api/useFollow'
 import UserAvatar from './UserAvatar'
 
 export default function RightSidebar() {
   const { t } = useTranslation()
   const { data: trendingCategories = [], isLoading } = useTrendingCategories()
   const { data: suggestedFollows = [], isLoading: isLoadingSuggest } = useSuggestedFollows()
+  const { mutate: followUser } = useFollowUser()
+
+  const [followedIds, setFollowedIds] = useState<Set<number>>(new Set())
+  const [pendingId, setPendingId] = useState<number | null>(null)
+
+  const handleFollow = (userId: number) => {
+    setPendingId(userId)
+    followUser(userId, {
+      onSuccess: () => setFollowedIds((prev) => new Set(prev).add(userId)),
+      onSettled: () => setPendingId(null),
+    })
+  }
 
   return (
     <aside className="d-flex flex-column gap-4 py-4 px-3">
@@ -18,7 +32,7 @@ export default function RightSidebar() {
           <TrendingUp className="text-primary" size={18} />
           <h6 className="mb-0 fw-bold">{t('dashboard_trending')}</h6>
         </div>
-        
+
         {isLoading ? (
           <div className="text-muted small">Đang tải...</div>
         ) : (
@@ -44,13 +58,15 @@ export default function RightSidebar() {
           <UserPlus className="text-primary" size={18} />
           <h6 className="mb-0 fw-bold">{t('dashboard_suggested')}</h6>
         </div>
-        
+
         {isLoadingSuggest ? (
           <div className="text-muted small">Đang tải...</div>
         ) : (
           <div className="d-flex flex-column gap-3">
             {suggestedFollows.map((user) => {
-              const matchText = user.match_score > 0 
+              const followed = followedIds.has(user.id)
+              const loading = pendingId === user.id
+              const matchText = user.match_score > 0
                 ? `Có ${user.match_score} thông tin chung`
                 : 'Gợi ý cho bạn'
 
@@ -66,12 +82,19 @@ export default function RightSidebar() {
                     </p>
                   </div>
                   <Button
-                    variant="outline-primary"
+                    variant={followed ? 'secondary' : 'outline-primary'}
                     size="sm"
-                    className="rounded-pill fw-medium py-1 px-3"
+                    disabled={followed || loading}
+                    onClick={() => handleFollow(user.id)}
+                    className="rounded-pill fw-medium py-1 px-3 flex-shrink-0 d-flex align-items-center gap-1"
                     style={{ fontSize: '0.8rem' }}
                   >
-                    Follow
+                    {loading
+                      ? <Spinner size="sm" animation="border" />
+                      : followed
+                        ? <><Check size={12} /> Đã theo dõi</>
+                        : 'Theo dõi'
+                    }
                   </Button>
                 </div>
               )
