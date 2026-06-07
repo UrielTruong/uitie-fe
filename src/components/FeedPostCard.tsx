@@ -480,11 +480,22 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
           <div className="border rounded-4 mb-3 overflow-hidden bg-light">
             {/* Original Author */}
             <div className="d-flex align-items-center gap-2 p-3 pb-2 border-bottom bg-white">
-              <div style={{ transform: 'scale(0.85)', transformOrigin: 'center left' }}>
+              <Link
+                to="/profile"
+                search={currentUser?.id === sharedAuthor?.id ? {} : { user: String(sharedAuthor?.id) }}
+                className="text-decoration-none"
+                style={{ transform: 'scale(0.85)', transformOrigin: 'center left' }}
+              >
                 <UserAvatar fullName={sharedAuthorName} />
-              </div>
+              </Link>
               <div>
-                <h6 className="mb-0 fw-bold small text-dark">{sharedAuthorName}</h6>
+                <Link
+                  to="/profile"
+                  search={currentUser?.id === sharedAuthor?.id ? {} : { user: String(sharedAuthor?.id) }}
+                  className="text-decoration-none text-dark"
+                >
+                  <h6 className="mb-0 fw-bold small">{sharedAuthorName}</h6>
+                </Link>
                 <div className="d-flex align-items-center gap-1 text-muted" style={{ fontSize: '0.75rem' }}>
                   {sharedPost.visibility === 'Private' ? (
                     <Lock size={10} />

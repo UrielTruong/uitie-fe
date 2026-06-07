@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Spinner } from 'react-bootstrap'
 import { UserPlus, TrendingUp, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from '@tanstack/react-router'
 import { useTrendingCategories } from '#/api/useCategory'
 import { useSuggestedFollows } from '#/api/useSuggestedFollows'
 import { useFollowUser } from '#/api/useFollow'
@@ -72,11 +73,19 @@ export default function RightSidebar() {
 
               return (
                 <div key={user.id} className="d-flex align-items-center gap-2">
-                  <UserAvatar fullName={user.full_name} avatar={user.avatar} />
+                  <Link to="/profile" search={{ user: String(user.id) }} className="text-decoration-none">
+                    <UserAvatar fullName={user.full_name} avatar={user.avatar} />
+                  </Link>
                   <div className="flex-grow-1 text-truncate">
-                    <p className="mb-0 fw-semibold text-truncate small" title={user.full_name}>
-                      {user.full_name}
-                    </p>
+                    <Link
+                      to="/profile"
+                      search={{ user: String(user.id) }}
+                      className="text-decoration-none text-body"
+                    >
+                      <p className="mb-0 fw-semibold text-truncate small" title={user.full_name}>
+                        {user.full_name}
+                      </p>
+                    </Link>
                     <p className="mb-0 text-muted text-truncate" style={{ fontSize: '0.75rem' }} title={matchText}>
                       {matchText}
                     </p>
