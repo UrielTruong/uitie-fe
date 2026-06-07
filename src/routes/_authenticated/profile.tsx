@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { UserRole } from '#/lib/fake-api'
 import { useProfile, useUpdateProfile, useUserPosts } from '#/api/useProfile'
+import { useFollowUser, useUnfollowUser } from '#/api/useFollow'
 import ReportModal from '../../components/ReportModal'
 import toast from 'react-hot-toast'
 import FeedPostCard from '#/components/FeedPostCard'
@@ -56,12 +57,17 @@ function ProfilePage() {
   const isMe = !userId
 
   const [tab, setTab] = useState<string>('posts')
-  const [following, setFollowing] = useState(!isMe)
 
   // Hook TanStack Query tự động quản lý fetching
   const { data: profileData, isLoading, isError } = useProfile(userId)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
   const { data: posts, isLoading: isLoadingPosts } = useUserPosts(profileData?.id)
+
+  const { mutate: followUser, isPending: isFollowing } = useFollowUser()
+  const { mutate: unfollowUser, isPending: isUnfollowing } = useUnfollowUser()
+
+  const isFollowPending = isFollowing || isUnfollowing
+  const isFollowingUser = profileData?.is_following ?? false
 
   const displayedPosts = posts?.filter((post: any) => post.status !== 'Rejected') || []
 
@@ -203,12 +209,23 @@ function ProfilePage() {
               ) : (
                 <>
                   <Button
-                    variant={following ? 'light' : 'primary'}
-                    onClick={() => setFollowing((p) => !p)}
+                    variant={isFollowingUser ? 'light' : 'primary'}
+                    disabled={isFollowPending}
+                    onClick={() => {
+                      if (isFollowingUser) {
+                        unfollowUser(profileData.id)
+                      } else {
+                        followUser(profileData.id)
+                      }
+                    }}
                     className="d-flex align-items-center gap-2 border"
                   >
-                    {following ? <Check size={16} /> : <UserPlus size={16} />}
-                    {following ? 'Đang theo dõi' : 'Theo dõi'}
+                    {isFollowPending
+                      ? <Spinner size="sm" animation="border" />
+                      : isFollowingUser
+                        ? <><Check size={16} /> Đang theo dõi</>
+                        : <><UserPlus size={16} /> Theo dõi</>
+                    }
                   </Button>
                   <Button
                     variant="outline-primary"
