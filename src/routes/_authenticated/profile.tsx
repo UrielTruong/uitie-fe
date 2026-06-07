@@ -1,5 +1,5 @@
 import { Card, Button, Badge, Image, Nav, Row, Col, Modal, Form, Spinner } from 'react-bootstrap'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   Camera,
@@ -55,6 +55,7 @@ function RoleBadge({ role }: { role: string }) {
 function ProfilePage() {
   const { user: userId } = Route.useSearch()
   const isMe = !userId
+  const navigate = useNavigate()
 
   const [tab, setTab] = useState<string>('posts')
 
@@ -230,6 +231,7 @@ function ProfilePage() {
                   <Button
                     variant="outline-primary"
                     className="d-flex align-items-center gap-2"
+                    onClick={() => navigate({ to: '/messages', search: { type: 'dm', id: profileData.id } })}
                   >
                     <MessageSquare size={16} /> Nhắn tin
                   </Button>
